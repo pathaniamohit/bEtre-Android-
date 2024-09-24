@@ -62,6 +62,14 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        //login button
+        loginbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkuser();
+            }
+        });
+
     }
 
     //check user and  Authication method
