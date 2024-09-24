@@ -12,6 +12,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         fragmentMap.put(R.id.navigation_inbox, new InboxFragment());
 
         if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.home_content, fragmentMap.get(R.id.navigation_explore)).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.home_content, Objects.requireNonNull(fragmentMap.get(R.id.navigation_explore))).commit();
         }
 
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {

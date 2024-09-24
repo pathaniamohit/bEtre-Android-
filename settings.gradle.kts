@@ -21,3 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "bEtre"
 include(":app")
+
+
