@@ -1,4 +1,4 @@
-package com.example.betre;
+package com.example.betre.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
