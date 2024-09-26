@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth;
 public class MainActivity extends AppCompatActivity {
 
     private Button signOutButton;
+
     private FirebaseAuth mAuth;
 
     @Override
