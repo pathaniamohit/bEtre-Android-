@@ -48,7 +48,7 @@
         android:padding="12dp"
         />
 
-    <!-- Sign Up Button -->
+
     <Button
         android:id="@+id/gotosignup"
         android:layout_width="match_parent"
