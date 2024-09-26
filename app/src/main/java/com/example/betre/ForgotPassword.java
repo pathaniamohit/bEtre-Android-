@@ -1,24 +1,47 @@
 package com.example.betre;
 
 import android.os.Bundle;
-
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 public class ForgotPassword extends AppCompatActivity {
+
+    android.widget.EditText editText;
+    android.widget.Button resetbutton;
+    com.google.firebase.auth.FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_forgot_password);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+
+        editText = findViewById(com.example.betre.R.id.emailEditText);
+        resetbutton = findViewById(R.id.resetPasswordButton);
+        mAuth = com.google.firebase.auth.FirebaseAuth.getInstance();
+
+        resetbutton.setOnClickListener(v -> resetPassword());
+    }
+
+    private void resetPassword() {
+        String email = editText.getText().toString().trim();
+
+        if (android.text.TextUtils.isEmpty(email) || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            editText.setError("Valid email is required");
+            return;
+        }
+
+        mAuth.sendPasswordResetEmail(email).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                android.widget.Toast.makeText(ForgotPassword.this, "Password reset email sent", android.widget.Toast.LENGTH_SHORT).show();
+                navigateToLogin();
+            } else {
+                android.widget.Toast.makeText(ForgotPassword.this, "Error sending password reset email", android.widget.Toast.LENGTH_SHORT).show();
+            }
         });
+    }
+
+    private void navigateToLogin() {
+        android.content.Intent intent = new android.content.Intent(ForgotPassword.this, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
 }
