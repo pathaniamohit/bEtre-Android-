@@ -45,7 +45,7 @@ dependencies {
 }
 dependencies {
 
-    // RecyclerView dependency
+    implementation(libs.firebase.database)// RecyclerView dependency
     implementation ("androidx.recyclerview:recyclerview:1.2.1")
 
     // Glide for image loading
