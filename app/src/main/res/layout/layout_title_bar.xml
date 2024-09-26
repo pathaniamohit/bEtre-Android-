@@ -27,3 +27,4 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="Message Icon"/>
 </LinearLayout>
+
