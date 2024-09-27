@@ -63,13 +63,12 @@
         android:id="@+id/login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Login"
-        android:textColor="@android:color/white"
-        android:background="#1565C0"
         android:layout_marginBottom="20dp"
-        android:padding="15dp"
+        android:text="login"
         android:textSize="18sp"
-        android:backgroundTint="@android:color/holo_blue_dark" />
+        android:padding="15dp"
+        android:backgroundTint="@android:color/holo_blue_light"
+        android:textColor="@android:color/white"/>
 
     <TextView
         android:id="@+id/signuplink"
@@ -79,6 +78,7 @@
         android:text="Don't have an account? Register"
         android:textColor="#1E88E5"
         android:gravity="center"
+        android:clickable="true"
         android:layout_marginBottom="20dp" />
 
 </LinearLayout>
