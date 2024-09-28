@@ -38,11 +38,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProfileFragment extends Fragment {
-    private static final int PICK_IMAGE_REQUEST = 1;
     private static final String TAG = "ProfileFragment";
 
     private ImageView profileImage;
-    private TextView profileName, profileEmail;
+    private TextView profileName, profileEmail, photosCount, followersCount, followsCount;
     private Uri imageUri;
     private FirebaseAuth mAuth;
     private StorageReference mStorageRef;
@@ -50,7 +49,7 @@ public class ProfileFragment extends Fragment {
     private RecyclerView imagesRecyclerView;
     private ImageAdapter imageAdapter;
     private List<String> imageUrls = new ArrayList<>();
-    private ImageView settings_button;
+    private ImageView settingsButton;
 
     public ProfileFragment() {}
 
@@ -67,7 +66,10 @@ public class ProfileFragment extends Fragment {
         profileImage = view.findViewById(R.id.profile_picture);
         profileName = view.findViewById(R.id.profile_name);
         profileEmail = view.findViewById(R.id.profile_email);
-        settings_button = view.findViewById(R.id.settings_button);
+        photosCount = view.findViewById(R.id.photos_count);
+        followersCount = view.findViewById(R.id.followers_count);
+        followsCount = view.findViewById(R.id.follows_count);
+        settingsButton = view.findViewById(R.id.settings_button);
         imagesRecyclerView = view.findViewById(R.id.images_grid);
         imagesRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
         imageAdapter = new ImageAdapter(getContext(), imageUrls);
@@ -82,14 +84,17 @@ public class ProfileFragment extends Fragment {
         if (user != null) {
             Log.d(TAG, "onViewCreated: User is authenticated. Loading profile data.");
             loadUserProfile(user.getUid());
-            getUserImages();
+            getUserImages(user.getUid());
+            loadPhotosCount(user.getUid());
+            loadFollowersCount(user.getUid());
+            loadFollowsCount(user.getUid());
         } else {
             Log.w(TAG, "onViewCreated: No authenticated user found.");
         }
 
         profileImage.setOnClickListener(v -> openImagePicker());
 
-        settings_button.setOnClickListener(v -> {
+        settingsButton.setOnClickListener(v -> {
             Log.d(TAG, "onViewCreated: Navigating to SettingsFragment.");
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.home_content, new SettingFragment())
@@ -103,13 +108,13 @@ public class ProfileFragment extends Fragment {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
+        if (requestCode == 1 && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
             imageUri = data.getData();
             Log.d(TAG, "onActivityResult: Image selected: " + imageUri);
             profileImage.setImageURI(imageUri);
@@ -190,10 +195,10 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    private void getUserImages() {
+    private void getUserImages(String userId) {
         Log.d(TAG, "getUserImages: Fetching user's images from Firestore.");
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference imagesRef = db.collection("user_images");
+        CollectionReference imagesRef = db.collection("user_images").document(userId).collection("images");
 
         imagesRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
@@ -207,10 +212,65 @@ public class ProfileFragment extends Fragment {
                         }
                     }
                     Log.d(TAG, "getUserImages: Updating image adapter with new data.");
+                    photosCount.setText(String.valueOf(imageUrls.size()));
                     imageAdapter.notifyDataSetChanged();
                 }
             } else {
                 Log.e(TAG, "getUserImages: Error fetching images", task.getException());
+            }
+        });
+    }
+
+    private void loadPhotosCount(String userId) {
+        Log.d(TAG, "loadPhotosCount: Fetching photos count for userId: " + userId);
+        mDatabase.child("user_photos").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int count = 0;
+                for (DataSnapshot photoSnapshot : snapshot.getChildren()) {
+                    count++;
+                }
+                Log.d(TAG, "onDataChange: Photos count: " + count);
+                photosCount.setText(String.valueOf(count));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "onCancelled: Failed to fetch photos count: " + error.getMessage(), error.toException());
+            }
+        });
+    }
+
+    private void loadFollowersCount(String userId) {
+        Log.d(TAG, "loadFollowersCount: Fetching followers count for userId: " + userId);
+        mDatabase.child("followers").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int count = (int) snapshot.getChildrenCount();
+                Log.d(TAG, "onDataChange: Followers count: " + count);
+                followersCount.setText(String.valueOf(count));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "onCancelled: Failed to fetch followers count: " + error.getMessage(), error.toException());
+            }
+        });
+    }
+
+    private void loadFollowsCount(String userId) {
+        Log.d(TAG, "loadFollowsCount: Fetching follows count for userId: " + userId);
+        mDatabase.child("following").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int count = (int) snapshot.getChildrenCount();
+                Log.d(TAG, "onDataChange: Follows count: " + count);
+                followsCount.setText(String.valueOf(count));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "onCancelled: Failed to fetch follows count: " + error.getMessage(), error.toException());
             }
         });
     }
