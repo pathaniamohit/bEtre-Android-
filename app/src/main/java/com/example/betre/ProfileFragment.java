@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.example.betre.adapters.ImageAdapter;
 import com.google.firebase.firestore.CollectionReference;
@@ -30,6 +31,7 @@ public class ProfileFragment extends Fragment {
     private RecyclerView imagesRecyclerView;
     private ImageAdapter imageAdapter;
     private List<String> imageUrls = new ArrayList<>();
+    ImageView settings_button;
 
     // TODO: Rename parameter arguments, choose names that match
     private static final String ARG_PARAM1 = "param1";
@@ -76,11 +78,18 @@ public class ProfileFragment extends Fragment {
 
         imagesRecyclerView = view.findViewById(R.id.images_grid);
         imagesRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
-
+        settings_button = view.findViewById(R.id.settings_button);
         imageAdapter = new ImageAdapter(getContext(), imageUrls);
         imagesRecyclerView.setAdapter(imageAdapter);
 
         getUserImages();
+
+        settings_button.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.home_content, new SettingFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         return view;
     }
