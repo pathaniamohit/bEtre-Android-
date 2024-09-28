@@ -5,8 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:padding="16dp"
-    android:background="?attr/colorSurface">
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/title_logo"
@@ -15,8 +14,10 @@
         android:layout_weight="1"
         android:fontFamily="@font/amarante_font"
         android:text="bEtre"
+        android:layout_marginLeft="50dp"
+        android:gravity="center"
         android:textColor="@color/black"
-        android:textSize="50sp"
+        android:textSize="45sp"
         android:textStyle="bold" />
 
     <ImageButton

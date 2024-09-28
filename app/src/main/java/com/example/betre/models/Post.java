@@ -1,4 +1,4 @@
-package com.example.betre;
+package com.example.betre.models;
 
 public class Post {
     private String userName;

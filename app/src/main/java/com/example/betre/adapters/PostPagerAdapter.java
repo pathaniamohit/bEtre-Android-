@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.betre.Post;
+import com.example.betre.models.Post;
 import com.example.betre.R;
 import com.bumptech.glide.Glide;
 import java.util.List;
