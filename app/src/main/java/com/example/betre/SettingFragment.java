@@ -1,5 +1,6 @@
 package com.example.betre;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -10,6 +11,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link SettingFragment#newInstance} factory method to
@@ -18,7 +26,10 @@ import android.widget.LinearLayout;
 public class SettingFragment extends Fragment {
 
     ImageView back_button;
-    LinearLayout edit_profile_layout;
+    private FirebaseAuth mAuth;
+    private StorageReference mStorageRef;
+    private DatabaseReference mDatabase;
+    LinearLayout edit_profile_layout,privacy_layout,about_layout,logout_layout;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -67,6 +78,13 @@ public class SettingFragment extends Fragment {
 
         back_button = view.findViewById(R.id.back_button);
         edit_profile_layout = view.findViewById(R.id.edit_profile_layout);
+        privacy_layout = view.findViewById(R.id.privacy_layout);
+        about_layout = view.findViewById(R.id.about_layout);
+        logout_layout = view.findViewById(R.id.logout_layout);
+
+        mAuth = FirebaseAuth.getInstance();
+        mStorageRef = FirebaseStorage.getInstance().getReference("profile_pictures");
+        mDatabase = FirebaseDatabase.getInstance().getReference();
 
         edit_profile_layout.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
@@ -78,6 +96,28 @@ public class SettingFragment extends Fragment {
         back_button.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.home_content, new ProfileFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+
+        about_layout.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.home_content, new AboutFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+
+        logout_layout.setOnClickListener(v -> {
+            mAuth.signOut();
+            Intent intent = new Intent(getActivity(), SignInActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            getActivity().finish();
+        });
+
+        privacy_layout.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.home_content, new PrivacyFragment())
                     .addToBackStack(null)
                     .commit();
         });
