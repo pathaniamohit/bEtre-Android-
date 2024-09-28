@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.betre.adapters.ImageAdapter;
+import com.example.betre.adapters.ImageAdapter_profile;
 import com.example.betre.models.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -47,7 +47,7 @@ public class ProfileFragment extends Fragment {
     private StorageReference mStorageRef;
     private DatabaseReference mDatabase;
     private RecyclerView imagesRecyclerView;
-    private ImageAdapter imageAdapter;
+    private ImageAdapter_profile imageAdapter;
     private List<String> imageUrls = new ArrayList<>();
     private ImageView settingsButton;
 
@@ -71,13 +71,14 @@ public class ProfileFragment extends Fragment {
         followsCount = view.findViewById(R.id.follows_count);
         settingsButton = view.findViewById(R.id.settings_button);
         imagesRecyclerView = view.findViewById(R.id.images_grid);
-        imagesRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
-        imageAdapter = new ImageAdapter(getContext(), imageUrls);
+
+        imagesRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
+        imageAdapter = new ImageAdapter_profile(getContext(), imageUrls);
         imagesRecyclerView.setAdapter(imageAdapter);
 
         Log.d(TAG, "onViewCreated: Initializing Firebase components.");
         mAuth = FirebaseAuth.getInstance();
-        mStorageRef = FirebaseStorage.getInstance().getReference("profile_pictures");
+        mStorageRef = FirebaseStorage.getInstance().getReference("user_images");
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
         FirebaseUser user = mAuth.getCurrentUser();
@@ -128,7 +129,7 @@ public class ProfileFragment extends Fragment {
         if (imageUri != null) {
             Log.d(TAG, "uploadImageToFirebaseStorage: Uploading image to Firebase Storage.");
             String userId = mAuth.getCurrentUser().getUid();
-            StorageReference fileRef = mStorageRef.child(userId + "/profile.jpg");
+            StorageReference fileRef = mStorageRef.child(userId).child(System.currentTimeMillis() + ".jpg");
 
             fileRef.putFile(imageUri)
                     .addOnSuccessListener(taskSnapshot -> {
@@ -136,7 +137,7 @@ public class ProfileFragment extends Fragment {
                         fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
                             Log.d(TAG, "uploadImageToFirebaseStorage: Image download URL: " + uri.toString());
                             String imageUrl = uri.toString();
-                            saveImageUrlToRealtimeDatabase(imageUrl);
+                            saveImageUrlToRealtimeDatabase(imageUrl, userId);
                         });
                     })
                     .addOnFailureListener(e -> {
@@ -149,17 +150,18 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    private void saveImageUrlToRealtimeDatabase(String imageUrl) {
+    private void saveImageUrlToRealtimeDatabase(String imageUrl, String userId) {
         Log.d(TAG, "saveImageUrlToRealtimeDatabase: Saving image URL to Realtime Database.");
-        String userId = mAuth.getCurrentUser().getUid();
-        mDatabase.child("users").child(userId).child("profileImageUrl").setValue(imageUrl)
+        DatabaseReference imagesRef = mDatabase.child("user_images").child(userId).push();
+        imagesRef.setValue(imageUrl)
                 .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "saveImageUrlToRealtimeDatabase: Profile image updated successfully.");
-                    showToast("Profile image updated");
+                    Log.d(TAG, "saveImageUrlToRealtimeDatabase: Image URL saved successfully.");
+                    showToast("Image uploaded");
+                    getUserImages(userId);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "saveImageUrlToRealtimeDatabase: Failed to update profile image: " + e.getMessage(), e);
-                    showToast("Failed to update profile image: " + e.getMessage());
+                    Log.e(TAG, "saveImageUrlToRealtimeDatabase: Failed to save image URL: " + e.getMessage(), e);
+                    showToast("Failed to save image URL: " + e.getMessage());
                 });
     }
 
@@ -196,34 +198,28 @@ public class ProfileFragment extends Fragment {
     }
 
     private void getUserImages(String userId) {
-        Log.d(TAG, "getUserImages: Fetching user's images from Firestore.");
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference imagesRef = db.collection("user_images").document(userId).collection("images");
+        Log.d(TAG, "getUserImages: Fetching user's images from Firebase Storage.");
+        StorageReference userImagesRef = mStorageRef.child(userId);
 
-        imagesRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                Log.d(TAG, "getUserImages: Images fetched successfully.");
-                QuerySnapshot documents = task.getResult();
-                if (documents != null) {
-                    for (DocumentSnapshot document : documents) {
-                        String url = document.getString("url");
-                        if (url != null) {
-                            imageUrls.add(url);
-                        }
-                    }
-                    Log.d(TAG, "getUserImages: Updating image adapter with new data.");
-                    photosCount.setText(String.valueOf(imageUrls.size()));
+        userImagesRef.listAll().addOnSuccessListener(listResult -> {
+            imageUrls.clear();
+            for (StorageReference fileRef : listResult.getItems()) {
+                fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    imageUrls.add(uri.toString());
                     imageAdapter.notifyDataSetChanged();
-                }
-            } else {
-                Log.e(TAG, "getUserImages: Error fetching images", task.getException());
+                    photosCount.setText(String.valueOf(imageUrls.size()));
+                }).addOnFailureListener(e -> {
+                    Log.e(TAG, "getUserImages: Failed to get download URL: " + e.getMessage(), e);
+                });
             }
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "getUserImages: Error fetching images", e);
         });
     }
 
     private void loadPhotosCount(String userId) {
         Log.d(TAG, "loadPhotosCount: Fetching photos count for userId: " + userId);
-        mDatabase.child("user_photos").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabase.child("user_images").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 int count = 0;
