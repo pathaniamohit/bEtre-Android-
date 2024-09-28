@@ -37,10 +37,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
-<<<<<<< HEAD
-=======
-    implementation(libs.firebase.database)
->>>>>>> Jashanpreet
+
     implementation(libs.firebase.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
@@ -64,4 +61,8 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore:+")
     implementation("com.google.firebase:firebase-storage:+")
     implementation("com.google.firebase:firebase-messaging:+")
+
+    //constraintlayout
+    implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
+
 }

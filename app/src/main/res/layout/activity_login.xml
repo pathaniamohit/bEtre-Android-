@@ -8,8 +8,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="20dp"
-    tools:context=".LoginActivity"
-    android:background="@drawable/background">
+    tools:context=".LoginActivity">
 
     <ImageView
         android:id="@+id/imageView"

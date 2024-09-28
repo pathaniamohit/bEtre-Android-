@@ -109,7 +109,7 @@ public class SettingFragment extends Fragment {
 
         logout_layout.setOnClickListener(v -> {
             mAuth.signOut();
-            Intent intent = new Intent(getActivity(), SignInActivity.class);
+            Intent intent = new Intent(getActivity(), LoginActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
             getActivity().finish();
