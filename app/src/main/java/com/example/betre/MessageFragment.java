@@ -1,4 +1,4 @@
-package com.example.betre.adapters;
+package com.example.betre;
 
 import android.os.Bundle;
 
@@ -7,8 +7,7 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.example.betre.R;
+import android.widget.ImageView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -16,6 +15,8 @@ import com.example.betre.R;
  * create an instance of this fragment.
  */
 public class MessageFragment extends Fragment {
+
+    ImageView back_button;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -61,6 +62,17 @@ public class MessageFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_message, container, false);
+        View view = inflater.inflate(R.layout.fragment_message, container, false);
+
+        back_button = view.findViewById(R.id.back_button);
+
+        back_button.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.home_content, new ExploreFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+
+        return  view;
     }
 }
