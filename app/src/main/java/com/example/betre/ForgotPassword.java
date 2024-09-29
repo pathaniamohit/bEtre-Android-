@@ -1,24 +1,36 @@
 package com.example.betre;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.ImageView;
+
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.auth.FirebaseAuth;
 
 public class ForgotPassword extends AppCompatActivity {
 
-    android.widget.EditText editText;
-    android.widget.Button resetbutton;
-    com.google.firebase.auth.FirebaseAuth mAuth;
+    private android.widget.EditText editText;
+    private android.widget.Button resetButton;
+    private FirebaseAuth mAuth;
+    private ImageView backButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password);
 
-        editText = findViewById(com.example.betre.R.id.emailEditText);
-        resetbutton = findViewById(R.id.resetPasswordButton);
-        mAuth = com.google.firebase.auth.FirebaseAuth.getInstance();
+        editText = findViewById(R.id.emailEditText);
+        resetButton = findViewById(R.id.resetPasswordButton);
+        mAuth = FirebaseAuth.getInstance();
+        backButton = findViewById(R.id.back_button);
 
-        resetbutton.setOnClickListener(v -> resetPassword());
+        resetButton.setOnClickListener(v -> resetPassword());
+
+        backButton.setOnClickListener(v -> {
+            startActivity(new Intent(ForgotPassword.this, SignupPage.class));
+            finish();
+        });
     }
 
     private void resetPassword() {
@@ -31,7 +43,7 @@ public class ForgotPassword extends AppCompatActivity {
 
         mAuth.sendPasswordResetEmail(email).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                android.widget.Toast.makeText(ForgotPassword.this, "Password reset email sent", android.widget.Toast.LENGTH_SHORT).show();
+                android.widget.Toast.makeText(ForgotPassword.this, "Check your mail", android.widget.Toast.LENGTH_SHORT).show();
                 navigateToLogin();
             } else {
                 android.widget.Toast.makeText(ForgotPassword.this, "Error sending password reset email", android.widget.Toast.LENGTH_SHORT).show();
@@ -40,7 +52,7 @@ public class ForgotPassword extends AppCompatActivity {
     }
 
     private void navigateToLogin() {
-        android.content.Intent intent = new android.content.Intent(ForgotPassword.this, LoginActivity.class);
+        Intent intent = new Intent(ForgotPassword.this, LoginActivity.class);
         startActivity(intent);
         finish();
     }
