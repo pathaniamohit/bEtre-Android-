@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -35,7 +36,9 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ProfileFragment extends Fragment {
     private static final String TAG = "ProfileFragment";
@@ -127,42 +130,37 @@ public class ProfileFragment extends Fragment {
 
     private void uploadImageToFirebaseStorage() {
         if (imageUri != null) {
-            Log.d(TAG, "uploadImageToFirebaseStorage: Uploading image to Firebase Storage.");
-            String userId = mAuth.getCurrentUser().getUid();
-            StorageReference fileRef = mStorageRef.child(userId).child(System.currentTimeMillis() + ".jpg");
+            StorageReference storageRef = FirebaseStorage.getInstance().getReference()
+                    .child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/profile.jpg");
 
-            fileRef.putFile(imageUri)
+            storageRef.putFile(imageUri)
                     .addOnSuccessListener(taskSnapshot -> {
-                        Log.d(TAG, "uploadImageToFirebaseStorage: Image uploaded successfully.");
-                        fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                            Log.d(TAG, "uploadImageToFirebaseStorage: Image download URL: " + uri.toString());
-                            String imageUrl = uri.toString();
-                            saveImageUrlToRealtimeDatabase(imageUrl, userId);
+                        storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                            String downloadUrl = uri.toString();
+                            saveImageUrlToDatabase(downloadUrl);
                         });
                     })
                     .addOnFailureListener(e -> {
-                        Log.e(TAG, "uploadImageToFirebaseStorage: Failed to upload image: " + e.getMessage(), e);
-                        showToast("Failed to upload image: " + e.getMessage());
+                        Log.e("uploadImageToFirebaseStorage", "Failed to upload image: " + e.getMessage());
+                        Toast.makeText(getContext(), "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
-        } else {
-            Log.w(TAG, "uploadImageToFirebaseStorage: No image URI to upload.");
-            showToast("No image selected");
         }
     }
 
-    private void saveImageUrlToRealtimeDatabase(String imageUrl, String userId) {
-        Log.d(TAG, "saveImageUrlToRealtimeDatabase: Saving image URL to Realtime Database.");
-        DatabaseReference imagesRef = mDatabase.child("user_images").child(userId).push();
-        imagesRef.setValue(imageUrl)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "saveImageUrlToRealtimeDatabase: Image URL saved successfully.");
-                    showToast("Image uploaded");
-                    getUserImages(userId);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "saveImageUrlToRealtimeDatabase: Failed to save image URL: " + e.getMessage(), e);
-                    showToast("Failed to save image URL: " + e.getMessage());
-                });
+    private void saveImageUrlToDatabase(String downloadUrl) {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("profileImageUrl", downloadUrl);
+
+        userRef.updateChildren(updates).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(getContext(), "Profile image updated", Toast.LENGTH_SHORT).show();
+            } else {
+                Log.e("saveImageUrlToDatabase", "Failed to update profile image URL");
+            }
+        });
     }
 
     private void loadUserProfile(String userId) {
@@ -180,8 +178,10 @@ public class ProfileFragment extends Fragment {
 
                         Glide.with(ProfileFragment.this)
                                 .load(user.getProfileImageUrl())
+                                .circleCrop()
                                 .placeholder(R.drawable.ic_profile_placeholder)
                                 .into(profileImage);
+
                     }
                 } else {
                     Log.w(TAG, "onDataChange: User data not found.");
