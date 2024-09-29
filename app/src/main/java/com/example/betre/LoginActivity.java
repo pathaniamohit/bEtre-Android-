@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
@@ -23,8 +24,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -32,9 +36,11 @@ public class LoginActivity extends AppCompatActivity {
     private MaterialButton loginButton;
     private TextView forgotPassword, signUpLink;
     private FirebaseAuth mAuth;
-    private FirebaseFirestore db;
+    private DatabaseReference UsersDB;
     private ImageView showPasswordButton;
     private boolean isPasswordVisible = false;
+
+    private static final String TAG = "LoginActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,43 +55,27 @@ public class LoginActivity extends AppCompatActivity {
         showPasswordButton = findViewById(R.id.show_password_button);
 
         mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
+        UsersDB = FirebaseDatabase.getInstance().getReference("users");
 
-        signUpLink.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(LoginActivity.this, SignupPage.class));
-            }
+        signUpLink.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, SignupPage.class)));
+
+        forgotPassword.setOnClickListener(v -> {
+            startActivity(new Intent(LoginActivity.this, ForgotPassword.class));
+            finish();
         });
 
-        forgotPassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(LoginActivity.this, ForgotPassword.class));
-                finish();
-            }
-        });
+        loginButton.setOnClickListener(v -> checkUserCredentials());
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkUserCredentials();
+        showPasswordButton.setOnClickListener(v -> {
+            if (isPasswordVisible) {
+                passwordLogin.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                showPasswordButton.setImageResource(R.drawable.ic_hide_password);
+            } else {
+                passwordLogin.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                showPasswordButton.setImageResource(R.drawable.ic_show_password);
             }
-        });
-
-        showPasswordButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isPasswordVisible) {
-                    passwordLogin.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                    showPasswordButton.setImageResource(R.drawable.ic_hide_password);
-                } else {
-                    passwordLogin.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                    showPasswordButton.setImageResource(R.drawable.ic_show_password);
-                }
-                passwordLogin.setSelection(passwordLogin.getText().length());
-                isPasswordVisible = !isPasswordVisible;
-            }
+            passwordLogin.setSelection(passwordLogin.getText().length());
+            isPasswordVisible = !isPasswordVisible;
         });
     }
 
@@ -116,43 +106,43 @@ public class LoginActivity extends AppCompatActivity {
                     handleLoginError(task);
                 }
             }
-        }).addOnFailureListener(new OnFailureListener() {
+        }).addOnFailureListener(e -> Toast.makeText(LoginActivity.this, "Login failed!", Toast.LENGTH_SHORT).show());
+    }
+
+    private void checkUserRole(String userId) {
+        UsersDB.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(LoginActivity.this, "Login failed!", Toast.LENGTH_SHORT).show();
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String role = snapshot.child("role").getValue(String.class);
+                    if (role != null) {
+                        Log.d(TAG, "User role found: " + role);
+                        navigateBasedOnRole(role);
+                    } else {
+                        Log.e(TAG, "Role not found for user");
+                        Toast.makeText(LoginActivity.this, "User role not found.", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Log.e(TAG, "User not found in database");
+                    Toast.makeText(LoginActivity.this, "User not found.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Error checking user role: " + error.getMessage());
+                Toast.makeText(LoginActivity.this, "Error checking user role.", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void checkUserRole(String userId) {
-        db.collection("users").document(userId).get()
-                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (task.isSuccessful()) {
-                            DocumentSnapshot document = task.getResult();
-                            if (document.exists()) {
-                                String role = document.getString("role");
-                                navigateBasedOnRole(role);
-                            } else {
-                                Toast.makeText(LoginActivity.this, "User role not found.", Toast.LENGTH_SHORT).show();
-                            }
-                        } else {
-                            Toast.makeText(LoginActivity.this, "Error checking user role.", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }
-
     private void navigateBasedOnRole(String role) {
-        if (role != null) {
-            if (role.equals("admin")) {
-                startActivity(new Intent(LoginActivity.this, AdminActivity.class));
-            } else {
-                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            }
+        if (role.equals("admin")) {
+            startActivity(new Intent(LoginActivity.this, AdminActivity.class));
+        } else if (role.equals("user")) {
+            startActivity(new Intent(LoginActivity.this, MainActivity.class));
         } else {
-            Toast.makeText(LoginActivity.this, "Unable to determine role. Please try again.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(LoginActivity.this, "Unknown role.", Toast.LENGTH_SHORT).show();
         }
         finish();
     }
@@ -170,6 +160,7 @@ public class LoginActivity extends AppCompatActivity {
         } catch (Exception e) {
             errorMessage = e.getMessage();
         }
+        Log.e(TAG, "Login error: " + errorMessage);
         Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
     }
 }
