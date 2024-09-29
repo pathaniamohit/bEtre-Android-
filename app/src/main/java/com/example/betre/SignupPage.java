@@ -209,11 +209,11 @@ public class SignupPage extends AppCompatActivity {
     private void togglePasswordVisibility(EditText passwordEditText, ImageView toggleButton) {
         if (passwordEditText.getInputType() == 144) {
             passwordEditText.setInputType(129);
-            toggleButton.setImageResource(R.drawable.ic_show_password);
+            toggleButton.setImageResource(R.drawable.ic_hide_password);
             Log.d(TAG, "Password visibility hidden");
         } else {
             passwordEditText.setInputType(144);
-            toggleButton.setImageResource(R.drawable.ic_hide_password);
+            toggleButton.setImageResource(R.drawable.ic_show_password);
             Log.d(TAG, "Password visibility shown");
         }
         passwordEditText.setSelection(passwordEditText.getText().length());

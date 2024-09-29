@@ -99,27 +99,28 @@
         android:textColor="@android:color/white"
         android:padding="15dp"
         app:cornerRadius="10dp"
-        app:backgroundTint="@color/blue"
+        app:backgroundTint="@color/black"
         android:layout_marginBottom="25dp" />
 
     <TextView
         android:id="@+id/forgot_password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="25dp"
+        android:clickable="true"
+        android:gravity="end"
         android:text="Forget Password?"
         android:textColor="@android:color/black"
-        android:gravity="end"
-        android:textStyle="bold"
-        android:clickable="true"
-        android:layout_marginBottom="25dp" />
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/signuplink"
+        android:layout_marginTop="160dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Don't have an account? Sign Up"
         android:textSize="16sp"
-        android:textColor="@color/blue"
+        android:textColor="@color/white"
         android:gravity="center"
         android:clickable="true"
         android:textStyle="bold" />

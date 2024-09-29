@@ -248,7 +248,7 @@
             android:layout_height="wrap_content"
             android:text="Already have an account? Sign in"
             android:textSize="16sp"
-            android:textColor="@color/blue"
+            android:textColor="@color/white"
             android:clickable="true"
             android:gravity="center"
             android:textStyle="bold"
