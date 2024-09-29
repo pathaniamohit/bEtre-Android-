@@ -20,6 +20,8 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -214,6 +216,18 @@ public class Edit_Profile_Fragment extends Fragment {
         String newUsername = usernameInput.getText().toString().trim();
         String newPhone = phoneInput.getText().toString().trim();
 
+        if (newUsername.isEmpty() || newUsername.length() < 8) {
+            usernameInput.setError("Username must be at least 8 characters");
+            Log.e(TAG, "Invalid username: " + newUsername);
+            return;
+        }
+
+        if (newPhone.isEmpty() || newPhone.length() != 10 || !android.util.Patterns.PHONE.matcher(newPhone).matches()) {
+            phoneInput.setError("Phone number must be 10 digits");
+            Log.e(TAG, "Invalid phone number: " + newPhone);
+            return;
+        }
+
         boolean isUsernameChanged = !newUsername.equals(initialUsername);
         boolean isPhoneChanged = !newPhone.equals(initialPhone);
 
@@ -289,9 +303,36 @@ public class Edit_Profile_Fragment extends Fragment {
     }
 
     private void updatePassword(String currentPassword, String newPassword, AlertDialog alertDialog) {
-        alertDialog.dismiss();
-        showToast("Password updated successfully.");
+        FirebaseUser user = mAuth.getCurrentUser();
+
+        if (user != null) {
+            AuthCredential credential = EmailAuthProvider.getCredential(user.getEmail(), currentPassword);
+            user.reauthenticate(credential).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    Log.d(TAG, "User re-authenticated.");
+
+                    // Now update the password
+                    user.updatePassword(newPassword).addOnCompleteListener(passwordUpdateTask -> {
+                        if (passwordUpdateTask.isSuccessful()) {
+                            Log.d(TAG, "Password updated successfully.");
+                            showToast("Password updated successfully.");
+                            alertDialog.dismiss();
+                        } else {
+                            Log.e(TAG, "Failed to update password: " + passwordUpdateTask.getException().getMessage());
+                            showToast("Failed to update password: " + passwordUpdateTask.getException().getMessage());
+                        }
+                    });
+                } else {
+                    Log.e(TAG, "Re-authentication failed: " + task.getException().getMessage());
+                    showToast("Re-authentication failed. Please check your current password.");
+                }
+            });
+        } else {
+            Log.w(TAG, "No authenticated user found.");
+            showToast("No authenticated user found. Please sign in again.");
+        }
     }
+
 
     private void showToast(String message) {
         Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
