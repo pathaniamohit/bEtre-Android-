@@ -2,4 +2,33 @@
     <string name="app_name">bEtre</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="about_text">bEtre is a social media platform built for authentic self-expression. Inspired by the French word \"être\,\" meaning \"to be\,\" bEtre empowers users to share who they truly are.
+
+    Our app allows users to create posts\, add location-based tags\, and engage in meaningful conversations. Whether you\'re connecting with friends or exploring new content\, bEtre helps you discover and express yourself in a genuine way.
+
+    We believe in building a safe and respectful community. With tools for moderation and user management\, bEtre ensures a positive environment for everyone.
+
+    At its heart\, bEtre is about being real\, being connected\, and being yourself.</string>
+
+    <string name="contact_info">Contact us at: support@bEtre.com</string>
+
+    <string name="privacy_info">
+    Your privacy is important to us. We ensure that your data is protected and managed securely. Here are some key points about our privacy policy\: \n\n
+    <br/><br/>
+    &#8226; We do not share your personal information with third parties without your consent.\n
+    &#8226; Your data is stored securely and is protected by encryption.\n
+    &#8226; You can control see privacy settings and manage what information is shared.\n
+    &#8226; We comply with all data protection regulations to ensure your information is safe.\n\n
+    </string>
+
+    <string name="accounts_info">
+    You have full control over your account settings and privacy preferences. Here are your rights and options for managing your account\:\n\n
+    <br/><br/>
+    &#8226; You can update your profile information\, including name\, phone\, and profile picture at any time.\n
+    &#8226; Control your privacy by adjusting who can view your posts and profile.\n
+    &#8226; You have the right to delete your account permanently, and all associated data will be removed.\n
+    &#8226; Manage notifications to control what updates you receive from the app.\n
+    &#8226; Review and update your security settings\, such as changing your password and enabling two\-factor authentication.\n
+    </string>
+
 </resources>
