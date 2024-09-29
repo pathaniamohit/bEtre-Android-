@@ -5,6 +5,9 @@ public class User {
     private String username;
     private String email;
     private String profileImageUrl;
+    private String phone;
+    private String gender;
+    private String role;
 
     public User() {}
 
@@ -13,6 +16,14 @@ public class User {
         this.username = username;
         this.email = email;
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public User(String username, String email, String phone, String gender, String role) {
+        this.username = username;
+        this.email = email;
+        this.phone = phone;
+        this.gender = gender;
+        this.role = role;
     }
 
     public String getUserId() {
@@ -45,5 +56,28 @@ public class User {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }
