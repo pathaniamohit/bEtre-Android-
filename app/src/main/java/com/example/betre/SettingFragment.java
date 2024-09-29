@@ -17,6 +17,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -107,14 +109,6 @@ public class SettingFragment extends Fragment {
                     .commit();
         });
 
-        logout_layout.setOnClickListener(v -> {
-            mAuth.signOut();
-            Intent intent = new Intent(getActivity(), LoginActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            getActivity().finish();
-        });
-
         privacy_layout.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.home_content, new PrivacyFragment())
@@ -122,6 +116,28 @@ public class SettingFragment extends Fragment {
                     .commit();
         });
 
+        logout_layout.setOnClickListener(v -> {
+            // Create an AlertDialog to confirm logout
+            new AlertDialog.Builder(getActivity())
+                    .setTitle("Logout")
+                    .setMessage("Are you sure you want to logout?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            mAuth.signOut();
+
+                            Intent intent = new Intent(getActivity(), LoginActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+
+                            if (getActivity() != null) {
+                                getActivity().finish();
+                            }
+                        }
+                    })
+                    .setNegativeButton("No", null)
+                    .show();
+        });
 
         return view;
     }
