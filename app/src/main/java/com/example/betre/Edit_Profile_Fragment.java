@@ -88,7 +88,6 @@ public class Edit_Profile_Fragment extends Fragment {
             userId = user.getUid();
             Log.d(TAG, "User ID: " + userId);
             fetchUserData();
-            fetchProfileImage();
         } else {
             Log.w(TAG, "User is not authenticated");
         }
@@ -131,9 +130,10 @@ public class Edit_Profile_Fragment extends Fragment {
 
                     emailInput.setEnabled(false);
 
-                    if (profileImageUrl != null) {
+                    if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
                         Glide.with(Edit_Profile_Fragment.this)
                                 .load(profileImageUrl)
+                                .circleCrop()
                                 .placeholder(R.drawable.ic_profile_placeholder)
                                 .into(profileImage);
                     }
@@ -147,16 +147,6 @@ public class Edit_Profile_Fragment extends Fragment {
                 Log.e(TAG, "Failed to fetch user data: " + databaseError.getMessage(), databaseError.toException());
             }
         });
-    }
-
-    private void fetchProfileImage() {
-        Log.d(TAG, "Fetching profile image from Firebase");
-        if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
-            Glide.with(this)
-                    .load(profileImageUrl)
-                    .placeholder(R.drawable.ic_profile_placeholder)
-                    .into(profileImage);
-        }
     }
 
     private void openImagePicker() {
