@@ -1,6 +1,13 @@
 package com.example.betre;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,12 +32,17 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link CreateFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
 public class CreateFragment extends Fragment {
+
+    private static final int PICK_IMAGE_REQUEST = 1;
 
     private ImageView userProfileImage;
     private TextView userName, selectImage, addLocation;
@@ -40,16 +52,16 @@ public class CreateFragment extends Fragment {
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private StorageReference mStorageRef;
+    private Uri selectedImageUri;
+    private String selectedLocation = "";
 
     public CreateFragment() {
-
+        // Required empty public constructor
     }
 
     public static CreateFragment newInstance(String param1, String param2) {
         CreateFragment fragment = new CreateFragment();
         Bundle args = new Bundle();
-        args.putString("param1", param1);
-        args.putString("param2", param2);
         fragment.setArguments(args);
         return fragment;
     }
@@ -58,8 +70,8 @@ public class CreateFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mAuth = FirebaseAuth.getInstance();
-        mDatabase = FirebaseDatabase.getInstance().getReference("users");
-        mStorageRef = FirebaseStorage.getInstance().getReference();
+        mDatabase = FirebaseDatabase.getInstance().getReference("posts");
+        mStorageRef = FirebaseStorage.getInstance().getReference("post_images");
     }
 
     @Nullable
@@ -81,33 +93,155 @@ public class CreateFragment extends Fragment {
             loadUserProfile(user.getUid());
         }
 
-        buttonDiscard.setOnClickListener(v -> {
-            postContent.setText("");
-            Toast.makeText(getActivity(), "Post Discarded", Toast.LENGTH_SHORT).show();
-        });
+        selectImage.setOnClickListener(v -> openImagePicker());
 
-        buttonPost.setOnClickListener(v -> {
-            String content = postContent.getText().toString();
-            if (!content.isEmpty()) {
-                Toast.makeText(getActivity(), "Post Created", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getActivity(), "Content cannot be empty", Toast.LENGTH_SHORT).show();
-            }
-        });
+        addLocation.setOnClickListener(v -> showLocationDialog());
 
-        selectImage.setOnClickListener(v -> {
-            Toast.makeText(getActivity(), "Select Image clicked", Toast.LENGTH_SHORT).show();
-        });
+        buttonDiscard.setOnClickListener(v -> resetFields());
 
-        addLocation.setOnClickListener(v -> {
-            Toast.makeText(getActivity(), "Add Location clicked", Toast.LENGTH_SHORT).show();
-        });
+        buttonPost.setOnClickListener(v -> createPost());
 
         return view;
     }
 
+    private void openImagePicker() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
+            selectedImageUri = data.getData();
+            displaySelectedImage();
+        }
+    }
+
+    private void displaySelectedImage() {
+        if (selectedImageUri != null) {
+            selectImage.setText("Image Selected");
+            String imageName = getFileName(selectedImageUri);
+            selectImage.append("\n" + imageName);
+        }
+    }
+
+    private String getFileName(Uri uri) {
+        String result = null;
+
+        if (uri.getScheme().equals("content")) {
+            try (Cursor cursor = getContext().getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (nameIndex >= 0) {
+                        result = cursor.getString(nameIndex);
+                    }
+                }
+            }
+        }
+
+        if (result == null) {
+            result = uri.getPath();
+            if (result != null) {
+                int cut = result.lastIndexOf('/');
+                if (cut != -1) {
+                    result = result.substring(cut + 1);
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+    private void showLocationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_location, null);
+        builder.setView(dialogView);
+
+        EditText locationInput = dialogView.findViewById(R.id.location_input);
+        Button buttonContinue = dialogView.findViewById(R.id.button_continue);
+
+        AlertDialog dialog = builder.create();
+
+        buttonContinue.setOnClickListener(v -> {
+            selectedLocation = locationInput.getText().toString().trim();
+            if (!TextUtils.isEmpty(selectedLocation)) {
+                addLocation.setText(selectedLocation);
+            }
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private void resetFields() {
+        postContent.setText("");
+        selectImage.setText("Select Image");
+        addLocation.setText("Add Location");
+        selectedImageUri = null;
+        selectedLocation = "";
+        Toast.makeText(getActivity(), "Post Discarded", Toast.LENGTH_SHORT).show();
+    }
+
+    private void createPost() {
+        String content = postContent.getText().toString().trim();
+
+        if (TextUtils.isEmpty(content)) {
+            Toast.makeText(getActivity(), "Content cannot be empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (selectedImageUri != null) {
+            uploadImageAndCreatePost(content);
+        } else {
+            createPostInDatabase(content, null);
+        }
+    }
+
+    private void uploadImageAndCreatePost(String content) {
+        String fileName = mAuth.getCurrentUser().getUid() + "_" + System.currentTimeMillis();
+        StorageReference fileRef = mStorageRef.child(fileName);
+
+        fileRef.putFile(selectedImageUri)
+                .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    String imageUrl = uri.toString();
+                    createPostInDatabase(content, imageUrl);
+                }))
+                .addOnFailureListener(e -> Toast.makeText(getActivity(), "Failed to upload image", Toast.LENGTH_SHORT).show());
+    }
+
+    private void createPostInDatabase(String content, @Nullable String imageUrl) {
+        String userId = mAuth.getCurrentUser().getUid();
+        String postId = mDatabase.push().getKey();
+        Map<String, Object> postMap = new HashMap<>();
+        postMap.put("userId", userId);
+        postMap.put("content", content);
+        postMap.put("location", selectedLocation);
+        postMap.put("timestamp", System.currentTimeMillis());
+
+        if (imageUrl != null) {
+            postMap.put("imageUrl", imageUrl);
+        }
+
+        mDatabase.child(postId).setValue(postMap).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(getActivity(), "Post Created", Toast.LENGTH_SHORT).show();
+                resetFields();
+            } else {
+                Toast.makeText(getActivity(), "Failed to create post", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private void loadUserProfile(String userId) {
-        mDatabase.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+        // Correct the database path to point to "users" instead of "posts"
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
+
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
@@ -116,14 +250,19 @@ public class CreateFragment extends Fragment {
 
                     if (username != null) {
                         userName.setText(username);
+                    } else {
+                        userName.setText("Unknown User");  // Fallback if username is null
                     }
 
-                    if (profileImageUrl != null) {
+                    if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
                         Glide.with(CreateFragment.this)
                                 .load(profileImageUrl)
-                                .circleCrop()
-                                .placeholder(R.drawable.ic_profile_placeholder)
+                                .circleCrop()  // Ensure the image is cropped in a circle
+                                .placeholder(R.drawable.ic_profile_placeholder)  // Placeholder image
                                 .into(userProfileImage);
+                    } else {
+                        // Use a placeholder if the profile image URL is null or empty
+                        userProfileImage.setImageResource(R.drawable.ic_profile_placeholder);
                     }
                 } else {
                     Toast.makeText(getActivity(), "User data not found", Toast.LENGTH_SHORT).show();
@@ -132,8 +271,10 @@ public class CreateFragment extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle error while accessing the database
                 Toast.makeText(getActivity(), "Error loading user data", Toast.LENGTH_SHORT).show();
             }
         });
     }
+
 }
