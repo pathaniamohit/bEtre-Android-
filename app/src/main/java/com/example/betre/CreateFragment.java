@@ -14,6 +14,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link CreateFragment#newInstance} factory method to
@@ -25,6 +36,10 @@ public class CreateFragment extends Fragment {
     private TextView userName, selectImage, addLocation;
     private EditText postContent;
     private Button buttonDiscard, buttonPost;
+
+    private FirebaseAuth mAuth;
+    private DatabaseReference mDatabase;
+    private StorageReference mStorageRef;
 
     public CreateFragment() {
 
@@ -42,10 +57,9 @@ public class CreateFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            String param1 = getArguments().getString("param1");
-            String param2 = getArguments().getString("param2");
-        }
+        mAuth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance().getReference("users");
+        mStorageRef = FirebaseStorage.getInstance().getReference();
     }
 
     @Nullable
@@ -61,6 +75,11 @@ public class CreateFragment extends Fragment {
         postContent = view.findViewById(R.id.post_content);
         buttonDiscard = view.findViewById(R.id.button_discard);
         buttonPost = view.findViewById(R.id.button_post);
+
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            loadUserProfile(user.getUid());
+        }
 
         buttonDiscard.setOnClickListener(v -> {
             postContent.setText("");
@@ -85,5 +104,36 @@ public class CreateFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private void loadUserProfile(String userId) {
+        mDatabase.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    String username = dataSnapshot.child("username").getValue(String.class);
+                    String profileImageUrl = dataSnapshot.child("profileImageUrl").getValue(String.class);
+
+                    if (username != null) {
+                        userName.setText(username);
+                    }
+
+                    if (profileImageUrl != null) {
+                        Glide.with(CreateFragment.this)
+                                .load(profileImageUrl)
+                                .circleCrop()
+                                .placeholder(R.drawable.ic_profile_placeholder)
+                                .into(userProfileImage);
+                    }
+                } else {
+                    Toast.makeText(getActivity(), "User data not found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Toast.makeText(getActivity(), "Error loading user data", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
