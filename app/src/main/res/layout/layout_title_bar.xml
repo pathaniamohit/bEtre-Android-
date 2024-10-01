@@ -14,8 +14,6 @@
         android:layout_weight="1"
         android:fontFamily="@font/amarante_font"
         android:text="bEtre"
-        android:layout_marginLeft="50dp"
-        android:gravity="center"
         android:textColor="@color/black"
         android:textSize="45sp"
         android:textStyle="bold" />

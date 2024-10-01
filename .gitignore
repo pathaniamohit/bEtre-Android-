@@ -1,0 +1,74 @@
+# Gradle files
+/.gradle/
+/build/
+/captures/
+/externalNativeBuild/
+
+# Android Studio project files
+.idea/
+/*.iml
+.classpath
+.project
+.settings/
+.idea/workspace.xml
+.idea/libraries/
+.idea/modules.xml
+.idea/.name
+.idea/misc.xml
+*.log
+local.properties
+
+# Keystore files (used for signing your APK)
+*.jks
+*.keystore
+
+# Gradle wrapper
+/gradle-wrapper.jar
+/gradle-wrapper.properties
+/gradlew
+/gradlew.bat
+
+# Java build files
+*.class
+*.jar
+*.war
+*.ear
+
+# Android build files
+/build/
+/bin/
+*/build/
+*/bin/
+*.apk
+*.ap_
+*.dex
+*.class
+*.so
+*.apk
+*.ap_
+*.dex
+
+# Proguard files
+proguard/
+*.pro
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.ipr
+*.iml
+
+# Node.js dependencies (if you are using Node.js for React Native or other purposes)
+node_modules/
+
+# macOS Finder and file system-specific files
+.DS_Store
+
+# Windows Thumbs.db files
+Thumbs.db
+
+# Other files
+*.tmp
+*.swp
+*.bak
+*.orig

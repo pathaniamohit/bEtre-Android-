@@ -2,15 +2,15 @@ package com.example.betre.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.betre.models.Post;
-import com.example.betre.R;
 import com.bumptech.glide.Glide;
+import com.example.betre.R;
+import com.example.betre.models.Post;
 import java.util.List;
 
 public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.PostViewHolder> {

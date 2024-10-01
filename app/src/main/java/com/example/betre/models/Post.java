@@ -13,7 +13,8 @@ public class Post {
     public Post() {
     }
 
-    public Post(String userName, String userEmail, String userProfileImage, String postImageUrl, String postDescription, String postLocation, int likeCount, int commentCount) {
+    public Post(String userName, String userEmail, String userProfileImage, String postImageUrl,
+                String postDescription, String postLocation, int likeCount, int commentCount) {
         this.userName = userName;
         this.userEmail = userEmail;
         this.userProfileImage = userProfileImage;
