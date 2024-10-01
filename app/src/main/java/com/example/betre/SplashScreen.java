@@ -1,21 +1,19 @@
 package com.example.betre;
 
 import android.content.Intent;
-import android.graphics.Matrix;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class SplashScreen extends AppCompatActivity {
 
@@ -23,7 +21,8 @@ public class SplashScreen extends AppCompatActivity {
     private static final String TAG = "SplashScreen";
 
     private FirebaseAuth mAuth;
-    private FirebaseFirestore db;
+    private DatabaseReference dbRef;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,10 +30,9 @@ public class SplashScreen extends AppCompatActivity {
         setContentView(R.layout.activity_splash_screen);
 
         mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
+        dbRef = FirebaseDatabase.getInstance().getReference();
 
         new android.os.Handler().postDelayed(this::checkAuthentication, DELAY);
-
     }
 
     private void checkAuthentication() {
@@ -50,27 +48,30 @@ public class SplashScreen extends AppCompatActivity {
     }
 
     private void checkUserRole(String uid) {
-        db.collection("users").document(uid).get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot document = task.getResult();
-                        if (document.exists()) {
-                            String role = document.getString("role");
-                            Log.d(TAG, "User role: " + role);
-                            if ("admin".equals(role)) {
-                                navigateToAdmin();
-                            } else {
-                                navigateToMain();
-                            }
-                        } else {
-                            Log.d(TAG, "No such document, defaulting to user role.");
-                            navigateToMain();
-                        }
+        dbRef.child("users").child(uid).child("role").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String role = snapshot.getValue(String.class);
+                    Log.d(TAG, "User role: " + role);
+
+                    if ("admin".equals(role)) {
+                        navigateToAdmin();
                     } else {
-                        Log.e(TAG, "Error getting role: ", task.getException());
-                        navigateToLogin();
+                        navigateToMain();
                     }
-                });
+                } else {
+                    Log.d(TAG, "No role found, defaulting to user role.");
+                    navigateToMain();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e(TAG, "Error getting role: ", error.toException());
+                navigateToLogin();
+            }
+        });
     }
 
     private void navigateToLogin() {
