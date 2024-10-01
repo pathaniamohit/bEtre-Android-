@@ -230,6 +230,11 @@ public class CreateFragment extends Fragment {
         String userId = mAuth.getCurrentUser().getUid();
         String postId = mDatabase.push().getKey();
 
+        if (postId == null) {
+            Toast.makeText(getActivity(), "Error: Could not generate post ID. Try again.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         Map<String, Object> postMap = new HashMap<>();
         postMap.put("userId", userId);
         postMap.put("content", content);
@@ -239,6 +244,10 @@ public class CreateFragment extends Fragment {
         if (imageUrl != null) {
             postMap.put("imageUrl", imageUrl);
         }
+
+        postMap.put("count_like", 0);
+        postMap.put("count_comment", 0);
+        postMap.put("is_reported", false);
 
         mDatabase.child(postId).setValue(postMap)
                 .addOnCompleteListener(task -> {
@@ -253,6 +262,7 @@ public class CreateFragment extends Fragment {
                     Toast.makeText(getActivity(), "Database error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
+
 
     private void loadUserProfile(String userId) {
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);

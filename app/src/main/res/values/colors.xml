@@ -7,4 +7,5 @@
     <color name="gray">#949494</color>
     <color name="primary">#34FFFF</color>
     <color name="splash">#D0E095</color>
+    <color name="faded">#D3FFFFFF</color>
 </resources>

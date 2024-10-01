@@ -12,7 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
 
         <ImageView
             android:id="@+id/user_profile_image"
@@ -59,118 +60,139 @@
             android:textColor="@android:color/white"/>
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/post_image"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/sample_image"
-        android:contentDescription="Post Image"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/rounded_image_background"/>
+        android:layout_height="wrap_content">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginTop="8dp">
+        <ImageView
+            android:id="@+id/post_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/rounded_image_background"
+            android:contentDescription="Post Image"
+            android:scaleType="centerCrop"
+            android:src="@drawable/sign1" />
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:id="@+id/elements"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_weight="1"
-            android:gravity="center_vertical">
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:layout_gravity="bottom"
+            android:padding="8dp"
+            android:background="@color/faded">
 
-            <ImageView
-                android:id="@+id/like_icon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_like"
-                android:contentDescription="Like Icon"/>
-
-            <TextView
-                android:id="@+id/like_count"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="573"
-                android:textStyle="bold"
-                android:layout_marginStart="4dp"
-                android:fontFamily="@font/roboto_serif"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_gravity="bottom"
+                android:padding="8dp"
+                android:background="@android:color/transparent">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:id="@+id/like_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_like"
+                        android:contentDescription="Like Icon"/>
+
+                    <TextView
+                        android:id="@+id/like_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textStyle="bold"
+                        android:layout_marginStart="4dp"
+                        android:fontFamily="@font/roboto_serif"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:id="@+id/comment_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_comment"
+                        android:contentDescription="Comment Icon"/>
+
+                    <TextView
+                        android:id="@+id/comment_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textStyle="bold"
+                        android:layout_marginStart="4dp"
+                        android:fontFamily="@font/roboto_serif"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:id="@+id/report_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_report"
+                        android:contentDescription="Report Icon"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_weight="1"
+                    android:gravity="right">
+
+                    <ImageView
+                        android:id="@+id/location_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_location"
+                        android:contentDescription="Location Icon"/>
+
+                    <TextView
+                        android:id="@+id/post_location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="location"
+                        android:textStyle="bold"
+                        android:paddingLeft="5dp"
+                        android:fontFamily="@font/roboto_serif"/>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:id="@+id/post_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Hello Guys, I would love to share a fine adventure trip in Tokyo."
+                    android:layout_marginTop="8dp"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/roboto_serif"
+                    android:textColor="@android:color/black"/>
+            </LinearLayout>
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_weight="1"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:id="@+id/comment_icon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_comment"
-                android:contentDescription="Comment Icon"/>
-
-            <TextView
-                android:id="@+id/comment_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="30"
-                android:textStyle="bold"
-                android:layout_marginStart="4dp"
-                android:fontFamily="@font/roboto_serif"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_weight="1"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:id="@+id/report_icon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_report"
-                android:contentDescription="Report Icon"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_weight="1"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:id="@+id/location_icon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_location"
-                android:contentDescription="Location Icon"/>
-
-            <TextView
-                android:id="@+id/post_location"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Tokyo"
-                android:layout_marginStart="4dp"
-                android:fontFamily="@font/roboto_serif"/>
-        </LinearLayout>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/post_description"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Hello Guys, I would love to share a fine adventure trip in Tokyo."
-        android:layout_marginTop="8dp"
-        android:textSize="14sp"
-        android:fontFamily="@font/roboto_serif"
-        android:textColor="@android:color/black"/>
+    </FrameLayout>
 </LinearLayout>
-
