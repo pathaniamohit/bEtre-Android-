@@ -30,5 +30,6 @@
     &#8226; Manage notifications to control what updates you receive from the app.\n
     &#8226; Review and update your security settings\, such as changing your password and enabling two\-factor authentication.\n
     </string>
+    <string name="confirm_your_password">Confirm your Password</string>
 
 </resources>

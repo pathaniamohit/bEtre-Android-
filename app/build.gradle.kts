@@ -46,6 +46,9 @@ dependencies {
 }
 dependencies {
 
+    implementation ("androidx.appcompat:appcompat:1.4.1")
+
+
     implementation(libs.firebase.database)// RecyclerView dependency
     implementation ("androidx.recyclerview:recyclerview:1.2.1")
 
