@@ -22,6 +22,9 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.appcheck.FirebaseAppCheck;
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -30,6 +33,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.HashMap;
@@ -69,6 +73,11 @@ public class CreateFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Initialize Firebase and App Check
+        FirebaseApp.initializeApp(requireContext());
+        FirebaseAppCheck.getInstance().installAppCheckProviderFactory(PlayIntegrityAppCheckProviderFactory.getInstance());
+
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference("posts");
         mStorageRef = FirebaseStorage.getInstance().getReference("post_images");
@@ -76,8 +85,7 @@ public class CreateFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_create, container, false);
 
         userProfileImage = view.findViewById(R.id.user_profile_image);
@@ -122,9 +130,7 @@ public class CreateFragment extends Fragment {
 
     private void displaySelectedImage() {
         if (selectedImageUri != null) {
-            selectImage.setText("Image Selected");
-            String imageName = getFileName(selectedImageUri);
-            selectImage.append("\n" + imageName);
+            selectImage.setText("Image Selected: " + getFileName(selectedImageUri));
         }
     }
 
@@ -142,14 +148,8 @@ public class CreateFragment extends Fragment {
             }
         }
 
-        if (result == null) {
-            result = uri.getPath();
-            if (result != null) {
-                int cut = result.lastIndexOf('/');
-                if (cut != -1) {
-                    result = result.substring(cut + 1);
-                }
-            }
+        if (result == null && uri.getPath() != null) {
+            result = uri.getPath().substring(uri.getPath().lastIndexOf('/') + 1);
         }
 
         return result;
@@ -158,8 +158,7 @@ public class CreateFragment extends Fragment {
 
     private void showLocationDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        LayoutInflater inflater = getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_add_location, null);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_location, null);
         builder.setView(dialogView);
 
         EditText locationInput = dialogView.findViewById(R.id.location_input);
@@ -184,7 +183,7 @@ public class CreateFragment extends Fragment {
         addLocation.setText("Add Location");
         selectedImageUri = null;
         selectedLocation = "";
-        Toast.makeText(getActivity(), "Post Discarded", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), "Fields reset", Toast.LENGTH_SHORT).show();
     }
 
     private void createPost() {
@@ -195,28 +194,42 @@ public class CreateFragment extends Fragment {
             return;
         }
 
-        if (selectedImageUri != null) {
-            uploadImageAndCreatePost(content);
-        } else {
-            createPostInDatabase(content, null);
+        if (selectedImageUri == null) {
+            Toast.makeText(getActivity(), "Please select an image", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        if (TextUtils.isEmpty(selectedLocation)) {
+            Toast.makeText(getActivity(), "Please add a location", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        uploadImageAndCreatePost(content);
     }
 
     private void uploadImageAndCreatePost(String content) {
-        String fileName = mAuth.getCurrentUser().getUid() + "_" + System.currentTimeMillis();
+        String userId = mAuth.getCurrentUser().getUid();
+        String fileName = userId + "_" + System.currentTimeMillis();
         StorageReference fileRef = mStorageRef.child(fileName);
 
-        fileRef.putFile(selectedImageUri)
+        StorageMetadata metadata = new StorageMetadata.Builder()
+                .setCustomMetadata("userId", userId)
+                .build();
+
+        fileRef.putFile(selectedImageUri, metadata)
                 .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                    String imageUrl = uri.toString();
-                    createPostInDatabase(content, imageUrl);
+                    createPostInDatabase(content, uri.toString());
                 }))
-                .addOnFailureListener(e -> Toast.makeText(getActivity(), "Failed to upload image", Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getActivity(), "Failed to upload image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                });
     }
 
     private void createPostInDatabase(String content, @Nullable String imageUrl) {
         String userId = mAuth.getCurrentUser().getUid();
         String postId = mDatabase.push().getKey();
+
         Map<String, Object> postMap = new HashMap<>();
         postMap.put("userId", userId);
         postMap.put("content", content);
@@ -227,18 +240,21 @@ public class CreateFragment extends Fragment {
             postMap.put("imageUrl", imageUrl);
         }
 
-        mDatabase.child(postId).setValue(postMap).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                Toast.makeText(getActivity(), "Post Created", Toast.LENGTH_SHORT).show();
-                resetFields();
-            } else {
-                Toast.makeText(getActivity(), "Failed to create post", Toast.LENGTH_SHORT).show();
-            }
-        });
+        mDatabase.child(postId).setValue(postMap)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(getActivity(), "Post created successfully", Toast.LENGTH_SHORT).show();
+                        resetFields();
+                    } else {
+                        Toast.makeText(getActivity(), "Failed to create post", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getActivity(), "Database error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
     }
 
     private void loadUserProfile(String userId) {
-        // Correct the database path to point to "users" instead of "posts"
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
 
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -248,20 +264,14 @@ public class CreateFragment extends Fragment {
                     String username = dataSnapshot.child("username").getValue(String.class);
                     String profileImageUrl = dataSnapshot.child("profileImageUrl").getValue(String.class);
 
-                    if (username != null) {
-                        userName.setText(username);
-                    } else {
-                        userName.setText("Unknown User");  // Fallback if username is null
-                    }
-
+                    userName.setText(username != null ? username : "Unknown User");
                     if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
                         Glide.with(CreateFragment.this)
                                 .load(profileImageUrl)
-                                .circleCrop()  // Ensure the image is cropped in a circle
-                                .placeholder(R.drawable.ic_profile_placeholder)  // Placeholder image
+                                .circleCrop()
+                                .placeholder(R.drawable.ic_profile_placeholder)
                                 .into(userProfileImage);
                     } else {
-                        // Use a placeholder if the profile image URL is null or empty
                         userProfileImage.setImageResource(R.drawable.ic_profile_placeholder);
                     }
                 } else {
@@ -271,7 +281,6 @@ public class CreateFragment extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle error while accessing the database
                 Toast.makeText(getActivity(), "Error loading user data", Toast.LENGTH_SHORT).show();
             }
         });

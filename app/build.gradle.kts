@@ -65,4 +65,8 @@ dependencies {
     //constraintlayout
     implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
 
+    // Firebase App Check for Play Integrity (Android)
+    implementation ("com.google.firebase:firebase-appcheck-playintegrity:17.0.0")
+
+
 }
