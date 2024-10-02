@@ -1,92 +1,77 @@
 package com.example.betre.models;
 
 public class Post {
+
     private String userName;
     private String userEmail;
     private String userProfileImage;
-    private String postImageUrl;
-    private String postDescription;
-    private String postLocation;
-    private int likeCount;
-    private int commentCount;
+    private String content;
+    private int count_comment;
+    private int count_like;
+    private String imageUrl;
+    private boolean is_reported;
+    private String location;
+    private long timestamp;
+    private String userId;
 
     public Post() {
     }
 
-    public Post(String userName, String userEmail, String userProfileImage, String postImageUrl,
-                String postDescription, String postLocation, int likeCount, int commentCount) {
+    public Post(String userName, String userEmail, String userProfileImage, String content, int count_comment, int count_like, String imageUrl, boolean is_reported, String location, long timestamp, String userId) {
         this.userName = userName;
         this.userEmail = userEmail;
         this.userProfileImage = userProfileImage;
-        this.postImageUrl = postImageUrl;
-        this.postDescription = postDescription;
-        this.postLocation = postLocation;
-        this.likeCount = likeCount;
-        this.commentCount = commentCount;
+        this.content = content;
+        this.count_comment = count_comment;
+        this.count_like = count_like;
+        this.imageUrl = imageUrl;
+        this.is_reported = is_reported;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.userId = userId;
     }
 
     public String getUserName() {
         return userName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
     public String getUserEmail() {
         return userEmail;
-    }
-
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
     }
 
     public String getUserProfileImage() {
         return userProfileImage;
     }
 
-    public void setUserProfileImage(String userProfileImage) {
-        this.userProfileImage = userProfileImage;
+    public String getContent() {
+        return content;
     }
 
-    public String getPostImageUrl() {
-        return postImageUrl;
+    public int getCount_comment() {
+        return count_comment;
     }
 
-    public void setPostImageUrl(String postImageUrl) {
-        this.postImageUrl = postImageUrl;
+    public int getCount_like() {
+        return count_like;
     }
 
-    public String getPostDescription() {
-        return postDescription;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setPostDescription(String postDescription) {
-        this.postDescription = postDescription;
+    public boolean isReported() {
+        return is_reported;
     }
 
-    public String getPostLocation() {
-        return postLocation;
+    public String getLocation() {
+        return location;
     }
 
-    public void setPostLocation(String postLocation) {
-        this.postLocation = postLocation;
+    public long getTimestamp() {
+        return timestamp;
     }
 
-    public int getLikeCount() {
-        return likeCount;
+    public String getUserId() {
+        return userId;
     }
-
-    public void setLikeCount(int likeCount) {
-        this.likeCount = likeCount;
-    }
-
-    public int getCommentCount() {
-        return commentCount;
-    }
-
-    public void setCommentCount(int commentCount) {
-        this.commentCount = commentCount;
-    }
-
 }

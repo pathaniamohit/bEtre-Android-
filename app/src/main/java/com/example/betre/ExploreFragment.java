@@ -12,6 +12,9 @@ import android.widget.Toast;
 
 import com.example.betre.adapters.PostPagerAdapter;
 import com.example.betre.models.Post;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.appcheck.FirebaseAppCheck;
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -24,7 +27,7 @@ import java.util.List;
 public class ExploreFragment extends Fragment {
 
     private ViewPager2 viewPager;
-    ImageView message_icon;
+    private ImageView message_icon;
     private PostPagerAdapter postPagerAdapter;
     private List<Post> postList;
 
@@ -46,12 +49,18 @@ public class ExploreFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Initialize Firebase and App Check
+        FirebaseApp.initializeApp(requireContext());  // Use requireContext() in Fragment
+        FirebaseAppCheck firebaseAppCheck = FirebaseAppCheck.getInstance();
+        firebaseAppCheck.installAppCheckProviderFactory(PlayIntegrityAppCheckProviderFactory.getInstance());
+
+        // Initialize the reference to the "posts" in Realtime Database
         postsReference = FirebaseDatabase.getInstance().getReference("posts");
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_explore, container, false);
 
         viewPager = view.findViewById(R.id.view_pager);
