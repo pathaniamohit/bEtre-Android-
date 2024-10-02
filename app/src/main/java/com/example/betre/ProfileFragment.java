@@ -234,24 +234,27 @@ public class ProfileFragment extends Fragment {
     }
 
     private void loadPhotosCount(String userId) {
-        Log.d(TAG, "loadPhotosCount: Fetching photos count for userId: " + userId);
-        mDatabase.child("user_images").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+        DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
+
+        postsRef.orderByChild("userId").equalTo(userId).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 int count = 0;
-                for (DataSnapshot photoSnapshot : snapshot.getChildren()) {
+
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     count++;
                 }
-                Log.d(TAG, "onDataChange: Photos count: " + count);
+
                 photosCount.setText(String.valueOf(count));
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "onCancelled: Failed to fetch photos count: " + error.getMessage(), error.toException());
+                Log.e(TAG, "Failed to load photos count: " + error.getMessage());
             }
         });
     }
+
 
     private void loadFollowersCount(String userId) {
         Log.d(TAG, "loadFollowersCount: Fetching followers count for userId: " + userId);

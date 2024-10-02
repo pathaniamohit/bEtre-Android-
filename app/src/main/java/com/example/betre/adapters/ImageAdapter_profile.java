@@ -115,6 +115,6 @@ public class ImageAdapter_profile extends RecyclerView.Adapter<ImageAdapter_prof
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(context, "Failed to delete post: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });delete
+                });
     }
 }
