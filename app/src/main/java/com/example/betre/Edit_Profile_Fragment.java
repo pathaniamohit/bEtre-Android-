@@ -3,6 +3,8 @@ package com.example.betre;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -34,6 +36,12 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
 public class Edit_Profile_Fragment extends Fragment {
 
     private static final String TAG = "EditProfileFragment";
@@ -43,6 +51,7 @@ public class Edit_Profile_Fragment extends Fragment {
     private ImageView profileImage;
     private EditText usernameInput, emailInput, phoneInput;
     private Button updateButton, changePasswordButton;
+    private Uri imageUri;
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
@@ -155,62 +164,89 @@ public class Edit_Profile_Fragment extends Fragment {
     }
 
     private void openImagePicker() {
-        Log.d(TAG, "Opening image picker");
+        Log.d(TAG, "openImagePicker: Opening image picker.");
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
-            Uri imageUri = data.getData();
-            Log.d(TAG, "Image selected: " + imageUri);
-            profileImage.setImageURI(imageUri);
-            uploadImageToFirebaseStorage(imageUri);
+        if (requestCode == 1 && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
+            imageUri = data.getData();
+            Log.d(TAG, "onActivityResult: Image selected: " + imageUri);
+
+            try {
+                Bitmap resizedBitmap = getResizedBitmap(imageUri);
+                profileImage.setImageBitmap(resizedBitmap);
+                uploadImageToFirebaseStorage(resizedBitmap);
+            } catch (IOException e) {
+                Log.e(TAG, "Error resizing image: " + e.getMessage());
+            }
         } else {
-            Log.w(TAG, "No image selected or operation cancelled.");
+            Log.w(TAG, "onActivityResult: No image selected or operation cancelled.");
         }
     }
 
-    private void uploadImageToFirebaseStorage(Uri imageUri) {
-        if (imageUri != null) {
-            Log.d(TAG, "Uploading image to Firebase Storage");
-            String fileName = userId + "_" + System.currentTimeMillis() + ".jpg";
-            StorageReference fileRef = mStorageRef.child(fileName);
+    private Bitmap getResizedBitmap(Uri imageUri) throws IOException {
+        InputStream imageStream = getActivity().getContentResolver().openInputStream(imageUri);
 
-            fileRef.putFile(imageUri)
-                    .addOnSuccessListener(taskSnapshot -> {
-                        Log.d(TAG, "Image uploaded successfully");
-                        fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                            String imageUrl = uri.toString();
-                            Log.d(TAG, "Image download URL: " + imageUrl);
-                            saveProfileImageUrlToDatabase(imageUrl);
-                        });
-                    })
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(imageStream, null, options);
+        imageStream.close();
+
+        int desiredWidth = 1024;
+        int desiredHeight = 1024;
+        int scaleFactor = Math.min(options.outWidth / desiredWidth, options.outHeight / desiredHeight);
+
+        options.inJustDecodeBounds = false;
+        options.inSampleSize = scaleFactor;
+
+        imageStream = getActivity().getContentResolver().openInputStream(imageUri);
+        Bitmap resizedBitmap = BitmapFactory.decodeStream(imageStream, null, options);
+        imageStream.close();
+
+        return resizedBitmap;
+    }
+
+    private void uploadImageToFirebaseStorage(Bitmap resizedBitmap) {
+        if (resizedBitmap != null) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+            byte[] data = baos.toByteArray();
+
+            StorageReference storageRef = FirebaseStorage.getInstance().getReference()
+                    .child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/profile.jpg");
+
+            storageRef.putBytes(data)
+                    .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String downloadUrl = uri.toString();
+                        saveImageUrlToDatabase(downloadUrl);
+                    }))
                     .addOnFailureListener(e -> {
-                        Log.e(TAG, "Failed to upload image: " + e.getMessage(), e);
-                        showToast("Failed to upload image: " + e.getMessage());
+                        Log.e("uploadImageToFirebaseStorage", "Failed to upload image: " + e.getMessage());
+                        Toast.makeText(getContext(), "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
-        } else {
-            Log.w(TAG, "No image URI to upload");
-            showToast("No image selected");
         }
     }
 
-    private void saveProfileImageUrlToDatabase(String imageUrl) {
-        Log.d(TAG, "Saving profile image URL to Realtime Database");
-        mDatabase.child("users").child(userId).child("profileImageUrl").setValue(imageUrl)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "Profile image URL saved successfully");
-                    showToast("Profile picture updated");
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to save profile image URL: " + e.getMessage(), e);
-                    showToast("Failed to save profile image URL: " + e.getMessage());
-                });
+    private void saveImageUrlToDatabase(String downloadUrl) {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("profileImageUrl", downloadUrl);
+
+        userRef.updateChildren(updates).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(getContext(), "Profile image updated", Toast.LENGTH_SHORT).show();
+            } else {
+                Log.e("saveImageUrlToDatabase", "Failed to update profile image URL");
+            }
+        });
     }
 
     private void updateUserProfile() {

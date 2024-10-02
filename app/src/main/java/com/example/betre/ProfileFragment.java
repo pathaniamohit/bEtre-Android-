@@ -2,6 +2,8 @@ package com.example.betre;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,6 +39,9 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -124,25 +129,55 @@ public class ProfileFragment extends Fragment {
         if (requestCode == 1 && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
             imageUri = data.getData();
             Log.d(TAG, "onActivityResult: Image selected: " + imageUri);
-            profileImage.setImageURI(imageUri);
-            uploadImageToFirebaseStorage();
+
+            try {
+                Bitmap resizedBitmap = getResizedBitmap(imageUri);
+                profileImage.setImageBitmap(resizedBitmap);
+                uploadImageToFirebaseStorage(resizedBitmap);
+            } catch (IOException e) {
+                Log.e(TAG, "Error resizing image: " + e.getMessage());
+            }
         } else {
             Log.w(TAG, "onActivityResult: No image selected or operation cancelled.");
         }
     }
 
-    private void uploadImageToFirebaseStorage() {
-        if (imageUri != null) {
+    private Bitmap getResizedBitmap(Uri imageUri) throws IOException {
+        InputStream imageStream = getActivity().getContentResolver().openInputStream(imageUri);
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(imageStream, null, options);
+        imageStream.close();
+
+        int desiredWidth = 1024;
+        int desiredHeight = 1024;
+        int scaleFactor = Math.min(options.outWidth / desiredWidth, options.outHeight / desiredHeight);
+
+        options.inJustDecodeBounds = false;
+        options.inSampleSize = scaleFactor;
+
+        imageStream = getActivity().getContentResolver().openInputStream(imageUri);
+        Bitmap resizedBitmap = BitmapFactory.decodeStream(imageStream, null, options);
+        imageStream.close();
+
+        return resizedBitmap;
+    }
+
+    private void uploadImageToFirebaseStorage(Bitmap resizedBitmap) {
+        if (resizedBitmap != null) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+            byte[] data = baos.toByteArray();
+
             StorageReference storageRef = FirebaseStorage.getInstance().getReference()
                     .child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/profile.jpg");
 
-            storageRef.putFile(imageUri)
-                    .addOnSuccessListener(taskSnapshot -> {
-                        storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                            String downloadUrl = uri.toString();
-                            saveImageUrlToDatabase(downloadUrl);
-                        });
-                    })
+            storageRef.putBytes(data)
+                    .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String downloadUrl = uri.toString();
+                        saveImageUrlToDatabase(downloadUrl);
+                    }))
                     .addOnFailureListener(e -> {
                         Log.e("uploadImageToFirebaseStorage", "Failed to upload image: " + e.getMessage());
                         Toast.makeText(getContext(), "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
