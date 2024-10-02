@@ -82,7 +82,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
         // Load post image from Firebase Storage using Glide
         Glide.with(context)
                 .load(post.getImageUrl())  // The URL of the post image
-                .placeholder(R.drawable.sample_image)  // Placeholder image
+                .placeholder(R.drawable.sign1)  // Placeholder image
                 .into(holder.postImage);  // The ImageView for the post image
     }
 
