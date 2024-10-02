@@ -2,8 +2,10 @@ package com.example.betre;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +13,13 @@ import android.widget.ImageView;
 
 import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -72,10 +81,42 @@ public class PrivacyFragment extends Fragment {
 
 
         back_button.setOnClickListener(v -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.home_content, new SettingFragment())
-                    .addToBackStack(null)
-                    .commit();
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+            if (user != null) {
+                String userId = user.getUid();
+                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
+
+                userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            String role = dataSnapshot.child("role").getValue(String.class);
+                            if (role != null && role.equals("admin")) {
+                                getParentFragmentManager().beginTransaction()
+                                        .replace(R.id.home_content, new ProfileAdminFragment())
+                                        .addToBackStack(null)
+                                        .commit();
+                            } else {
+                                getParentFragmentManager().beginTransaction()
+                                        .replace(R.id.home_content, new SettingFragment())
+                                        .addToBackStack(null)
+                                        .commit();
+                            }
+                        } else {
+                            getParentFragmentManager().beginTransaction()
+                                    .replace(R.id.home_content, new SettingFragment())
+                                    .addToBackStack(null)
+                                    .commit();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("back_button", "Failed to read user data: " + databaseError.getMessage());
+                    }
+                });
+            }
         });
 
         return view;

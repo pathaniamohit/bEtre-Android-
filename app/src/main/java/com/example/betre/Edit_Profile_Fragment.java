@@ -109,10 +109,40 @@ public class Edit_Profile_Fragment extends Fragment {
         profileImage.setOnClickListener(v -> openImagePicker());
 
         back_button.setOnClickListener(v -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.home_content, new SettingFragment())
-                    .addToBackStack(null)
-                    .commit();
+            if (user != null) {
+                String userId = user.getUid();
+                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
+
+                userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            String role = dataSnapshot.child("role").getValue(String.class);
+                            if (role != null && role.equals("admin")) {
+                                getParentFragmentManager().beginTransaction()
+                                        .replace(R.id.home_content, new ProfileAdminFragment())
+                                        .addToBackStack(null)
+                                        .commit();
+                            } else {
+                                getParentFragmentManager().beginTransaction()
+                                        .replace(R.id.home_content, new SettingFragment())
+                                        .addToBackStack(null)
+                                        .commit();
+                            }
+                        } else {
+                            getParentFragmentManager().beginTransaction()
+                                    .replace(R.id.home_content, new SettingFragment())
+                                    .addToBackStack(null)
+                                    .commit();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("back_button", "Failed to read user data: " + databaseError.getMessage());
+                    }
+                });
+            }
         });
 
         updateButton.setOnClickListener(v -> updateUserProfile());

@@ -14,7 +14,7 @@
 
     <string name="privacy_info">
     Your privacy is important to us. We ensure that your data is protected and managed securely. Here are some key points about our privacy policy\: \n\n
-    <br/><br/>
+    <br /><br />
     &#8226; We do not share your personal information with third parties without your consent.\n
     &#8226; Your data is stored securely and is protected by encryption.\n
     &#8226; You can control see privacy settings and manage what information is shared.\n
@@ -23,7 +23,7 @@
 
     <string name="accounts_info">
     You have full control over your account settings and privacy preferences. Here are your rights and options for managing your account\:\n\n
-    <br/><br/>
+    <br /><br />
     &#8226; You can update your profile information\, including name\, phone\, and profile picture at any time.\n
     &#8226; Control your privacy by adjusting who can view your posts and profile.\n
     &#8226; You have the right to delete your account permanently, and all associated data will be removed.\n
