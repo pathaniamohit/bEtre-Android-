@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.betre.adapters.ImageAdapter_profile;
+import com.example.betre.models.Post;
 import com.example.betre.models.User;
 import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
@@ -32,10 +33,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -56,9 +53,9 @@ public class ProfileFragment extends Fragment {
     private FirebaseAuth mAuth;
     private StorageReference mStorageRef;
     private DatabaseReference mDatabase;
-    private RecyclerView imagesRecyclerView;
-    private ImageAdapter_profile imageAdapter;
-    private List<String> imageUrls = new ArrayList<>();
+    private RecyclerView postsRecyclerView;
+    private ImageAdapter_profile postAdapter;
+    private List<Post> postList;
     private ImageView settingsButton;
 
     public ProfileFragment() {}
@@ -79,12 +76,13 @@ public class ProfileFragment extends Fragment {
         photosCount = view.findViewById(R.id.photos_count);
         followersCount = view.findViewById(R.id.followers_count);
         followsCount = view.findViewById(R.id.follows_count);
+        postsRecyclerView = view.findViewById(R.id.images_grid);
         settingsButton = view.findViewById(R.id.settings_button);
-        imagesRecyclerView = view.findViewById(R.id.images_grid);
 
-        imagesRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
-        imageAdapter = new ImageAdapter_profile(getContext(), imageUrls);
-        imagesRecyclerView.setAdapter(imageAdapter);
+        postsRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 1));
+        postList = new ArrayList<>();
+        postAdapter = new ImageAdapter_profile(getContext(), postList);
+        postsRecyclerView.setAdapter(postAdapter);
 
         Log.d(TAG, "onViewCreated: Initializing Firebase components.");
         mAuth = FirebaseAuth.getInstance();
@@ -96,7 +94,7 @@ public class ProfileFragment extends Fragment {
         if (user != null) {
             Log.d(TAG, "onViewCreated: User is authenticated. Loading profile data.");
             loadUserProfile(user.getUid());
-            getUserImages(user.getUid());
+            loadUserPosts(user.getUid());
             loadPhotosCount(user.getUid());
             loadFollowersCount(user.getUid());
             loadFollowsCount(user.getUid());
@@ -235,26 +233,6 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    private void getUserImages(String userId) {
-        Log.d(TAG, "getUserImages: Fetching user's images from Firebase Storage.");
-        StorageReference userImagesRef = mStorageRef.child(userId);
-
-        userImagesRef.listAll().addOnSuccessListener(listResult -> {
-            imageUrls.clear();
-            for (StorageReference fileRef : listResult.getItems()) {
-                fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                    imageUrls.add(uri.toString());
-                    imageAdapter.notifyDataSetChanged();
-                    photosCount.setText(String.valueOf(imageUrls.size()));
-                }).addOnFailureListener(e -> {
-                    Log.e(TAG, "getUserImages: Failed to get download URL: " + e.getMessage(), e);
-                });
-            }
-        }).addOnFailureListener(e -> {
-            Log.e(TAG, "getUserImages: Error fetching images", e);
-        });
-    }
-
     private void loadPhotosCount(String userId) {
         Log.d(TAG, "loadPhotosCount: Fetching photos count for userId: " + userId);
         mDatabase.child("user_images").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -305,6 +283,29 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.e(TAG, "onCancelled: Failed to fetch follows count: " + error.getMessage(), error.toException());
+            }
+        });
+    }
+
+    private void loadUserPosts(String userId) {
+        DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
+
+        postsRef.orderByChild("userId").equalTo(userId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                postList.clear();
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                    Post post = postSnapshot.getValue(Post.class);
+                    if (post != null) {
+                        postList.add(post);
+                    }
+                }
+                postAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(getContext(), "Error loading posts: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
