@@ -73,7 +73,8 @@
             android:background="@drawable/rounded_image_background"
             android:contentDescription="Post Image"
             android:scaleType="centerCrop"
-            android:src="@drawable/sign1" />
+            android:adjustViewBounds="true"
+            />
 
         <LinearLayout
             android:id="@+id/elements"
@@ -82,6 +83,7 @@
             android:orientation="vertical"
             android:gravity="center_vertical"
             android:layout_gravity="bottom"
+            android:visibility="visible"
             android:padding="8dp"
             android:background="@color/faded">
 
