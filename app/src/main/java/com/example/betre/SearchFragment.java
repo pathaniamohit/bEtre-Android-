@@ -49,7 +49,7 @@ public class SearchFragment extends Fragment {
         btnGo = view.findViewById(R.id.btnGo);
         recyclerView = view.findViewById(R.id.recyclerView);
 
-        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
         postList = new ArrayList<>();
         postAdapter = new PostAdapter(postList);
         recyclerView.setAdapter(postAdapter);
@@ -139,4 +139,41 @@ public class SearchFragment extends Fragment {
         });
     }
 
+    // RecyclerView Adapter for displaying posts
+    public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
+        private List<Post> posts;
+
+        public PostAdapter(List<Post> posts) {
+            this.posts = posts;
+        }
+
+        @NonNull
+        @Override
+        public PostViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_image, parent, false);
+            return new PostViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(PostViewHolder holder, int position) {
+            Post post = posts.get(position);
+            Glide.with(getContext())
+                    .load(post.getImageUrl())
+                    .into(holder.postImage);
+        }
+
+        @Override
+        public int getItemCount() {
+            return posts.size();
+        }
+
+        public class PostViewHolder extends RecyclerView.ViewHolder {
+            public ImageView postImage;
+
+            public PostViewHolder(View itemView) {
+                super(itemView);
+                postImage = itemView.findViewById(R.id.image_item);
+            }
+        }
+    }
 }
