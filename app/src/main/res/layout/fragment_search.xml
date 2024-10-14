@@ -9,6 +9,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:id="@+id/goBar"
         android:background="@drawable/search_background"
         android:elevation="4dp"
         android:padding="0dp"
@@ -52,5 +53,14 @@
         android:layout_below="@id/searchView"
         android:layout_marginTop="16dp"
         tools:ignore="NotSibling" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/goBar"
+        android:layout_marginTop="16dp"
+        android:scrollbars="vertical"
+        tools:listitem="@layout/item_image" />
 
 </RelativeLayout>
