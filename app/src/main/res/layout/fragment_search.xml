@@ -31,16 +31,33 @@
             android:id="@+id/btnGo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Go"
-            android:textSize="30dp"
+            android:text="@string/go"
+            android:textSize="30sp"
             android:background="@android:color/transparent"
             android:textColor="@color/green"
             android:textStyle="bold"
-            android:layout_marginRight="-10dp"
-            android:layout_alignParentRight="true"
+            android:layout_marginEnd="-10dp"
+            android:layout_alignParentEnd="true"
             android:layout_centerVertical="true" />
 
     </RelativeLayout>
+
+    <HorizontalScrollView
+        android:id="@+id/tagsScrollView"
+        android:layout_marginTop="-20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/goBar">
+
+        <LinearLayout
+            android:id="@+id/tagsLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+        </LinearLayout>
+
+    </HorizontalScrollView>
 
     <TextView
         android:id="@+id/searchResult"
@@ -59,7 +76,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/goBar"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="40dp"
         android:scrollbars="vertical"
         tools:listitem="@layout/item_image" />
 

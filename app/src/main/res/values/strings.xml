@@ -31,5 +31,6 @@
     &#8226; Review and update your security settings\, such as changing your password and enabling two\-factor authentication.\n
     </string>
     <string name="confirm_your_password">Confirm your Password</string>
+    <string name="go">Go</string>
 
 </resources>

@@ -7,7 +7,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,9 +26,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class SearchFragment extends Fragment {
 
@@ -37,6 +41,7 @@ public class SearchFragment extends Fragment {
     private PostAdapter postAdapter;
     private List<Post> postList;
     private Map<String, String> userIdToUsernameMap;
+    private LinearLayout tagsLayout;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -48,6 +53,7 @@ public class SearchFragment extends Fragment {
         searchResult = view.findViewById(R.id.searchResult);
         btnGo = view.findViewById(R.id.btnGo);
         recyclerView = view.findViewById(R.id.recyclerView);
+        tagsLayout = view.findViewById(R.id.tagsLayout);
 
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
         postList = new ArrayList<>();
@@ -71,6 +77,9 @@ public class SearchFragment extends Fragment {
                 fetchPosts("");
             }
         });
+
+        // Fetch and display random tags for locations and users
+        displayRandomTags();
 
         return view;
     }
@@ -138,6 +147,54 @@ public class SearchFragment extends Fragment {
             }
         });
     }
+
+    // Display random tags for users and locations
+    private void displayRandomTags() {
+        tagsLayout.removeAllViews();
+
+        Button allTagButton = new Button(getContext());
+        allTagButton.setText("All");
+        allTagButton.setOnClickListener(v -> {
+            fetchPosts("");
+        });
+        tagsLayout.addView(allTagButton);
+
+        // Fetch locations and display random tags
+        DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
+        postsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                List<String> locations = new ArrayList<>();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    String location = snapshot.child("location").getValue(String.class);
+                    if (location != null && !locations.contains(location)) {
+                        locations.add(location);
+                    }
+                }
+
+                Collections.shuffle(locations);
+
+                int tagCount = Math.min(5, locations.size());
+                for (int i = 0; i < tagCount; i++) {
+                    String locationTag = locations.get(i);
+
+                    Button tagButton = new Button(getContext());
+                    tagButton.setText(locationTag);
+                    tagButton.setOnClickListener(v -> {
+                        fetchPosts(locationTag);
+                    });
+
+                    tagsLayout.addView(tagButton);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e("SearchFragment", "Database error: " + databaseError.getMessage());
+            }
+        });
+    }
+
 
     // RecyclerView Adapter for displaying posts
     public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
