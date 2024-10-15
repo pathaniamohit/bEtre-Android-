@@ -13,6 +13,7 @@ public class Post {
     private String location;
     private long timestamp;
     private String userId;
+    private String postId;
 
     public Post() {
     }
@@ -74,4 +75,10 @@ public class Post {
     public String getUserId() {
         return userId;
     }
+
+    public String getPostId() {
+        return postId;
+    }
 }
+
+

@@ -15,6 +15,7 @@ import com.example.betre.models.Post;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -82,13 +83,17 @@ public class ExploreFragment extends Fragment {
     }
 
     private void loadPosts() {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
         postsReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 postList.clear();
+
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     Post post = postSnapshot.getValue(Post.class);
-                    if (post != null) {
+
+                    if (post != null && !post.getUserId().equals(currentUserId)) {
                         postList.add(post);
                     }
                 }
