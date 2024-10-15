@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.betre.R;
 import com.example.betre.models.Post;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -41,9 +43,11 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
     @Override
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
         Post post = postList.get(position);
+        String postOwnerId = post.getUserId();  // User ID of the person who made the post
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // Fetch user details from Realtime Database
-        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(post.getUserId());
+        // Fetch user details from Realtime Database (existing functionality)
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(postOwnerId);
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -55,9 +59,9 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                     holder.userName.setText(username);
                     holder.userEmail.setText(email);
 
-                    // Fetch profile image from Firebase Storage
+                    // Fetch profile image from Firebase Storage (existing functionality)
                     StorageReference profileImageRef = FirebaseStorage.getInstance()
-                            .getReference("profile_pictures/" + post.getUserId() + ".jpg");
+                            .getReference("profile_pictures/" + postOwnerId + ".jpg");
 
                     // Load profile image using Glide
                     Glide.with(context)
@@ -73,18 +77,80 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             }
         });
 
-        // Set post details (like count, comment count, description, location)
+        // Set post details (existing functionality)
         holder.likeCount.setText(String.valueOf(post.getCount_like()));
         holder.commentCount.setText(String.valueOf(post.getCount_comment()));
         holder.postDescription.setText(post.getContent());
         holder.postLocation.setText(post.getLocation());
 
-        // Load post image from Firebase Storage using Glide
+        // Load post image from Firebase Storage using Glide (existing functionality)
         Glide.with(context)
-                .load(post.getImageUrl())  // The URL of the post image
-                .placeholder(R.drawable.sign1)  // Placeholder image
-                .into(holder.postImage);  // The ImageView for the post image
+                .load(post.getImageUrl())
+                .placeholder(R.drawable.sign1)
+                .into(holder.postImage);
+
+        // Reference to the following node for the current user
+        DatabaseReference followingRef = FirebaseDatabase.getInstance().getReference("following")
+                .child(currentUserId).child(postOwnerId);
+
+        // Check if the current user is already following the post owner
+        followingRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists() && dataSnapshot.getValue(Boolean.class)) {
+                    holder.followButton.setText("Unfollow");
+                } else {
+                    holder.followButton.setText("Follow");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle possible errors
+            }
+        });
+
+        holder.followButton.setOnClickListener(v -> {
+            followingRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists() && dataSnapshot.getValue(Boolean.class)) {
+                        unfollowUser(currentUserId, postOwnerId);
+                        holder.followButton.setText("Follow");
+                    } else {
+                        followUser(currentUserId, postOwnerId);
+                        holder.followButton.setText("Unfollow");
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    // Handle errors
+                }
+            });
+        });
     }
+
+    private void followUser(String currentUserId, String postOwnerId) {
+        DatabaseReference followersRef = FirebaseDatabase.getInstance().getReference("followers")
+                .child(postOwnerId).child(currentUserId);
+        DatabaseReference followingRef = FirebaseDatabase.getInstance().getReference("following")
+                .child(currentUserId).child(postOwnerId);
+
+        followersRef.setValue(true);
+        followingRef.setValue(true);
+    }
+
+    private void unfollowUser(String currentUserId, String postOwnerId) {
+        DatabaseReference followersRef = FirebaseDatabase.getInstance().getReference("followers")
+                .child(postOwnerId).child(currentUserId);
+        DatabaseReference followingRef = FirebaseDatabase.getInstance().getReference("following")
+                .child(currentUserId).child(postOwnerId);
+
+        followersRef.removeValue();
+        followingRef.removeValue();
+    }
+
 
     @Override
     public int getItemCount() {
@@ -93,11 +159,13 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
 
     public static class PostViewHolder extends RecyclerView.ViewHolder {
         ImageView userProfileImage, postImage;
+        Button followButton;
         TextView userName, userEmail, postDescription, likeCount, commentCount, postLocation;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
             userProfileImage = itemView.findViewById(R.id.user_profile_image);
+            followButton = itemView.findViewById(R.id.follow_button);
             postImage = itemView.findViewById(R.id.post_image);
             userName = itemView.findViewById(R.id.user_name);
             userEmail = itemView.findViewById(R.id.user_email);
