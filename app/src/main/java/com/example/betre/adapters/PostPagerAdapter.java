@@ -95,6 +95,34 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                 .placeholder(R.drawable.sign1)
                 .into(holder.postImage);
 
+        // Check if the user has liked the post and set the correct like icon
+        DatabaseReference likeRef = FirebaseDatabase.getInstance().getReference("likes")
+                .child(post.getPostId()).child(currentUserId);
+
+        likeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    holder.likeIcon.setImageResource(R.drawable.ic_redlike);
+                } else {
+                    holder.likeIcon.setImageResource(R.drawable.ic_like);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("PostPagerAdapter", "Error fetching like status: " + databaseError.getMessage());
+            }
+        });
+
+        holder.likeIcon.setOnClickListener(v -> {
+            if (post.getPostId() != null) {
+                handleLikeClick(post.getPostId(), holder, currentUserId);
+            } else {
+                Log.e("PostPagerAdapter", "Cannot like: postId is null");
+            }
+        });
+
         // Reference to the following node for the current user
         DatabaseReference followingRef = FirebaseDatabase.getInstance().getReference("following")
                 .child(currentUserId).child(postOwnerId);
@@ -143,6 +171,78 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                 openCommentPopup(post.getPostId(), holder);
             } else {
                 Log.e("PostPagerAdapter", "Cannot add comment: postId is null");
+            }
+        });
+    }
+
+    // Function to handle like/unlike functionality
+    private void handleLikeClick(String postId, PostViewHolder holder, String currentUserId) {
+        DatabaseReference likeRef = FirebaseDatabase.getInstance().getReference("likes")
+                .child(postId).child(currentUserId);
+
+        likeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    likeRef.removeValue();
+                    decrementLikeCount(postId);
+                    holder.likeIcon.setImageResource(R.drawable.ic_like);
+                } else {
+                    likeRef.setValue(true);
+                    incrementLikeCount(postId);
+                    holder.likeIcon.setImageResource(R.drawable.ic_redlike);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("PostPagerAdapter", "Error toggling like: " + databaseError.getMessage());
+            }
+        });
+    }
+
+    // Increment the like count for a post
+    private void incrementLikeCount(String postId) {
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
+        postRef.child("count_like").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                Integer currentCount = mutableData.getValue(Integer.class);
+                if (currentCount == null) {
+                    mutableData.setValue(1);
+                } else {
+                    mutableData.setValue(currentCount + 1);
+                }
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
+                if (databaseError != null) {
+                    Log.e("PostPagerAdapter", "Error incrementing like count: " + databaseError.getMessage());
+                }
+            }
+        });
+    }
+
+    // Decrement the like count for a post
+    private void decrementLikeCount(String postId) {
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
+        postRef.child("count_like").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                Integer currentCount = mutableData.getValue(Integer.class);
+                if (currentCount != null && currentCount > 0) {
+                    mutableData.setValue(currentCount - 1);
+                }
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
+                if (databaseError != null) {
+                    Log.e("PostPagerAdapter", "Error decrementing like count: " + databaseError.getMessage());
+                }
             }
         });
     }
@@ -315,7 +415,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
     }
 
     public static class PostViewHolder extends RecyclerView.ViewHolder {
-        ImageView userProfileImage, postImage, commentIcon;
+        ImageView userProfileImage, postImage, commentIcon, likeIcon;
         Button followButton;
         TextView userName, userEmail, postDescription, likeCount, commentCount, postLocation;
 
@@ -325,6 +425,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             followButton = itemView.findViewById(R.id.follow_button);
             postImage = itemView.findViewById(R.id.post_image);
             commentIcon = itemView.findViewById(R.id.comment_icon);
+            likeIcon = itemView.findViewById(R.id.like_icon);  // Added like icon
             userName = itemView.findViewById(R.id.user_name);
             userEmail = itemView.findViewById(R.id.user_email);
             postDescription = itemView.findViewById(R.id.post_description);
