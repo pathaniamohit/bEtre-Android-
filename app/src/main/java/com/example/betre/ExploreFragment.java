@@ -33,6 +33,7 @@ public class ExploreFragment extends Fragment {
     private List<Post> postList;
 
     private DatabaseReference postsReference;
+    private ValueEventListener postsListener;
 
     public ExploreFragment() {
         // Required empty public constructor
@@ -77,15 +78,25 @@ public class ExploreFragment extends Fragment {
                     .commit();
         });
 
-        loadPosts();
-
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadPosts();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        detachListener();
     }
 
     private void loadPosts() {
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        postsReference.addValueEventListener(new ValueEventListener() {
+        postsListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 postList.clear();
@@ -95,7 +106,6 @@ public class ExploreFragment extends Fragment {
 
                     if (post != null && !post.getUserId().equals(currentUserId)) {
                         post.setPostId(postSnapshot.getKey());
-
                         postList.add(post);
                     }
                 }
@@ -109,9 +119,16 @@ public class ExploreFragment extends Fragment {
                     Toast.makeText(getContext(), "Error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
-        });
+        };
+
+        postsReference.addListenerForSingleValueEvent(postsListener);
     }
 
+    private void detachListener() {
+        if (postsListener != null) {
+            postsReference.removeEventListener(postsListener);
+        }
+    }
 }
 
 
