@@ -115,6 +115,16 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             }
         });
 
+//report user
+        holder.reportIcon.setOnClickListener(v -> {
+            if (post.getPostId() != null) {
+                openReportDialog(post.getPostId(), holder);
+            } else {
+                Log.e("PostPagerAdapter", "Cannot report: postId is null");
+            }
+        });
+
+
         holder.likeIcon.setOnClickListener(v -> {
             if (post.getPostId() != null) {
                 handleLikeClick(post.getPostId(), holder, currentUserId);
@@ -174,6 +184,63 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             }
         });
     }
+
+    private void openReportDialog(String postId, PostViewHolder holder) {
+        if (postId == null) {
+            Log.e("PostPagerAdapter", "Cannot open report dialog: postId is null");
+            return;
+        }
+
+        // Create the report dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Report Post");
+
+        final EditText input = new EditText(context);
+        input.setHint("Enter reason for reporting (optional)");
+        builder.setView(input);
+
+        builder.setPositiveButton("Submit", (dialog, which) -> {
+            String reportReason = input.getText().toString().trim();
+            if (reportReason.isEmpty()) {
+                reportReason = "Inappropriate content";
+            }
+            submitReportToFirebase(postId, reportReason, holder);
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.show();
+    }
+
+    // Submit report to Firebase
+    private void submitReportToFirebase(String postId, String reportReason, PostViewHolder holder) {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        DatabaseReference reportRef = FirebaseDatabase.getInstance().getReference("reports").child(postId).child(currentUserId);
+
+        reportRef.setValue(reportReason).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.d("PostPagerAdapter", "Report successfully submitted.");
+                markPostAsReported(postId, holder);
+            } else {
+                Log.e("PostPagerAdapter", "Failed to submit report: " + task.getException().getMessage());
+            }
+        });
+    }
+
+    private void markPostAsReported(String postId, PostViewHolder holder) {
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
+
+        postRef.child("is_reported").setValue(true).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.d("PostPagerAdapter", "Post marked as reported.");
+                Toast.makeText(context, "Post reported", Toast.LENGTH_SHORT).show();
+            } else {
+                Log.e("PostPagerAdapter", "Failed to mark post as reported: " + task.getException().getMessage());
+            }
+        });
+    }
+
 
     // Function to handle like/unlike functionality
     private void handleLikeClick(String postId, PostViewHolder holder, String currentUserId) {
@@ -415,7 +482,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
     }
 
     public static class PostViewHolder extends RecyclerView.ViewHolder {
-        ImageView userProfileImage, postImage, commentIcon, likeIcon;
+        ImageView userProfileImage, postImage, commentIcon, likeIcon, reportIcon;
         Button followButton;
         TextView userName, userEmail, postDescription, likeCount, commentCount, postLocation;
 
@@ -425,13 +492,14 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             followButton = itemView.findViewById(R.id.follow_button);
             postImage = itemView.findViewById(R.id.post_image);
             commentIcon = itemView.findViewById(R.id.comment_icon);
-            likeIcon = itemView.findViewById(R.id.like_icon);  // Added like icon
+            likeIcon = itemView.findViewById(R.id.like_icon);
             userName = itemView.findViewById(R.id.user_name);
             userEmail = itemView.findViewById(R.id.user_email);
             postDescription = itemView.findViewById(R.id.post_description);
             likeCount = itemView.findViewById(R.id.like_count);
             commentCount = itemView.findViewById(R.id.comment_count);
             postLocation = itemView.findViewById(R.id.post_location);
+            reportIcon = itemView.findViewById(R.id.report_icon);
         }
     }
 }
