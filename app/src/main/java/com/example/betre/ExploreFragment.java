@@ -94,6 +94,8 @@ public class ExploreFragment extends Fragment {
                     Post post = postSnapshot.getValue(Post.class);
 
                     if (post != null && !post.getUserId().equals(currentUserId)) {
+                        post.setPostId(postSnapshot.getKey());
+
                         postList.add(post);
                     }
                 }
@@ -107,9 +109,9 @@ public class ExploreFragment extends Fragment {
                     Toast.makeText(getContext(), "Error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
-
         });
     }
+
 }
 
 
