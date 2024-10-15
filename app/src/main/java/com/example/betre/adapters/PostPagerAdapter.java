@@ -8,14 +8,17 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.betre.R;
+import com.example.betre.UserProfileFragment;
 import com.example.betre.models.Comment;
 import com.example.betre.models.Post;
 import com.google.firebase.auth.FirebaseAuth;
@@ -124,6 +127,15 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             }
         });
 
+        // Set OnClickListener for the user profile layout to open UserProfileFragment
+        holder.userProfileImage.setOnClickListener(v -> {
+            openUserProfileFragment(postOwnerId);
+        });
+
+        holder.userProfileLayout.setOnClickListener(v -> {
+            openUserProfileFragment(postOwnerId);
+        });
+
 
         holder.likeIcon.setOnClickListener(v -> {
             if (post.getPostId() != null) {
@@ -184,6 +196,17 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             }
         });
     }
+
+    private void openUserProfileFragment(String userId) {
+        UserProfileFragment userProfileFragment = UserProfileFragment.newInstance(userId);
+
+        ((AppCompatActivity) context).getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.home_content, userProfileFragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
 
     private void openReportDialog(String postId, PostViewHolder holder) {
         if (postId == null) {
@@ -484,6 +507,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
     public static class PostViewHolder extends RecyclerView.ViewHolder {
         ImageView userProfileImage, postImage, commentIcon, likeIcon, reportIcon;
         Button followButton;
+        LinearLayout userProfileLayout;
         TextView userName, userEmail, postDescription, likeCount, commentCount, postLocation;
 
         public PostViewHolder(@NonNull View itemView) {
@@ -500,6 +524,8 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             commentCount = itemView.findViewById(R.id.comment_count);
             postLocation = itemView.findViewById(R.id.post_location);
             reportIcon = itemView.findViewById(R.id.report_icon);
+            userProfileLayout = itemView.findViewById(R.id.user_info);
+
         }
     }
 }
