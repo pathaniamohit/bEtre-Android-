@@ -66,15 +66,15 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                 if (dataSnapshot.exists()) {
                     String username = dataSnapshot.child("username").getValue(String.class);
                     String email = dataSnapshot.child("email").getValue(String.class);
+                    String imageUrl = dataSnapshot.child("profileImageUrl").getValue(String.class);
 
                     holder.userName.setText(username);
                     holder.userEmail.setText(email);
 
-                    // Load profile image using Glide
-                    StorageReference profileImageRef = FirebaseStorage.getInstance()
-                            .getReference("profile_pictures/" + postOwnerId + ".jpg");
+                    // Load user profile image using Glide
                     Glide.with(context)
-                            .load(profileImageRef)
+                            .load(imageUrl)
+                            .circleCrop()
                             .placeholder(R.drawable.ic_profile_placeholder)
                             .into(holder.userProfileImage);
                 }
