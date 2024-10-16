@@ -307,6 +307,15 @@ public class SearchFragment extends Fragment {
         return null;
     }
 
+    private void openDisplayPostFragment(String userId) {
+        DisplayPost displayPostFragment = DisplayPost.newInstance(userId, null);
+        ((AppCompatActivity) getContext()).getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.home_content, displayPostFragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
     // Display random tags for users and locations
     private void displayRandomTags() {
         tagsLayout.removeAllViews();
@@ -357,6 +366,8 @@ public class SearchFragment extends Fragment {
     // RecyclerView Adapter for displaying posts
     public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
         private List<Post> posts;
+        private static final long DOUBLE_CLICK_TIME_DELTA = 300; // Milliseconds
+        private long lastClickTime = 0;
 
         public PostAdapter(List<Post> posts) {
             this.posts = posts;
@@ -375,6 +386,16 @@ public class SearchFragment extends Fragment {
             Glide.with(getContext())
                     .load(post.getImageUrl())
                     .into(holder.postImage);
+
+            // Handle double click
+            holder.itemView.setOnClickListener(v -> {
+                long clickTime = System.currentTimeMillis();
+                if (clickTime - lastClickTime < DOUBLE_CLICK_TIME_DELTA) {
+                    // Double-click detected, open DisplayPost fragment and pass post's userId
+                    openDisplayPostFragment(post.getUserId());
+                }
+                lastClickTime = clickTime;
+            });
         }
 
         @Override
