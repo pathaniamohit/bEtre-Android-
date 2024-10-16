@@ -33,6 +33,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.PostViewHolder> {
@@ -118,7 +119,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             }
         });
 
-//report user
+        //report user
         holder.reportIcon.setOnClickListener(v -> {
             if (post.getPostId() != null) {
                 openReportDialog(post.getPostId(), holder);
@@ -177,6 +178,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                     } else {
                         followUser(currentUserId, postOwnerId);
                         holder.followButton.setText("Unfollow");
+                        notifyUserAboutFollow(postOwnerId);
                     }
                 }
 
@@ -195,6 +197,19 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                 Log.e("PostPagerAdapter", "Cannot add comment: postId is null");
             }
         });
+    }
+
+    // Notify user about follow
+    private void notifyUserAboutFollow(String userId) {
+        DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference("notifications").child(userId);
+        String notificationId = notificationsRef.push().getKey();
+
+        HashMap<String, Object> notificationMap = new HashMap<>();
+        notificationMap.put("type", "follow");
+        notificationMap.put("username", FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
+        notificationMap.put("timestamp", System.currentTimeMillis());
+
+        notificationsRef.child(notificationId).setValue(notificationMap);
     }
 
     private void openUserProfileFragment(String userId) {
@@ -264,7 +279,6 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
         });
     }
 
-
     // Function to handle like/unlike functionality
     private void handleLikeClick(String postId, PostViewHolder holder, String currentUserId) {
         DatabaseReference likeRef = FirebaseDatabase.getInstance().getReference("likes")
@@ -281,6 +295,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                     likeRef.setValue(true);
                     incrementLikeCount(postId);
                     holder.likeIcon.setImageResource(R.drawable.ic_redlike);
+                    notifyUserAboutLike(postId);
                 }
             }
 
@@ -290,6 +305,37 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             }
         });
     }
+
+    // Notify post owner about the like
+    private void notifyUserAboutLike(String postId) {
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
+        postRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    String postOwnerId = dataSnapshot.child("userId").getValue(String.class);
+                    if (postOwnerId != null && !postOwnerId.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                        DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference("notifications").child(postOwnerId);
+                        String notificationId = notificationsRef.push().getKey();
+
+                        HashMap<String, Object> notificationMap = new HashMap<>();
+                        notificationMap.put("type", "like");
+                        notificationMap.put("username", FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
+                        notificationMap.put("postId", postId);
+                        notificationMap.put("timestamp", System.currentTimeMillis());
+
+                        notificationsRef.child(notificationId).setValue(notificationMap);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("PostPagerAdapter", "Error notifying user: " + databaseError.getMessage());
+            }
+        });
+    }
+
 
     // Increment the like count for a post
     private void incrementLikeCount(String postId) {
@@ -420,17 +466,17 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                 String username = dataSnapshot.child("username").getValue(String.class);
                 Log.d("PostPagerAdapter", "Retrieved username: " + username);
 
-                // Get reference to comments node for the specific post
                 DatabaseReference commentsRef = FirebaseDatabase.getInstance().getReference("comments").child(postId);
                 String commentId = commentsRef.push().getKey();  // Generate a new comment ID
                 Log.d("PostPagerAdapter", "Generated commentId: " + commentId);
 
-                // Create a new Comment object and save it to Firebase
                 Comment comment = new Comment(currentUserId, username, commentText, System.currentTimeMillis());
                 commentsRef.child(commentId).setValue(comment).addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Log.d("PostPagerAdapter", "Comment successfully added.");
                         incrementCommentCount(postId, holder);
+                        // Notify the post owner about the new comment
+                        notifyUserAboutComment(postId, username, commentText);
                     } else {
                         Log.e("PostPagerAdapter", "Failed to add comment: " + task.getException().getMessage());
                     }
@@ -441,6 +487,37 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e("PostPagerAdapter", "Error adding comment: " + databaseError.getMessage());
                 Toast.makeText(context, "Failed to add comment: " + databaseError.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    // Notify post owner about the comment
+    private void notifyUserAboutComment(String postId, String commenterUsername, String commentText) {
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
+        postRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    String postOwnerId = dataSnapshot.child("userId").getValue(String.class);
+                    if (postOwnerId != null && !postOwnerId.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                        DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference("notifications").child(postOwnerId);
+                        String notificationId = notificationsRef.push().getKey();
+
+                        HashMap<String, Object> notificationMap = new HashMap<>();
+                        notificationMap.put("type", "comment");
+                        notificationMap.put("username", commenterUsername);
+                        notificationMap.put("content", commentText);
+                        notificationMap.put("postId", postId);
+                        notificationMap.put("timestamp", System.currentTimeMillis());
+
+                        notificationsRef.child(notificationId).setValue(notificationMap);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("PostPagerAdapter", "Error notifying user: " + databaseError.getMessage());
             }
         });
     }
