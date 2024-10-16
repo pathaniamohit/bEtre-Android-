@@ -78,7 +78,7 @@ public class UserProfileFragment extends Fragment {
 
         postsRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 1));
         postList = new ArrayList<>();
-        postAdapter = new ImageAdapter_profile(getContext(), postList);
+        postAdapter = new ImageAdapter_profile(getContext(), postList, false);
         postsRecyclerView.setAdapter(postAdapter);
 
         mAuth = FirebaseAuth.getInstance();
@@ -204,3 +204,5 @@ public class UserProfileFragment extends Fragment {
         Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
     }
 }
+
+

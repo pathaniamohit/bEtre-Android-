@@ -1,7 +1,7 @@
 package com.example.betre.adapters;
 
 import android.content.Context;
-import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.betre.R;
 import com.example.betre.models.Post;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import java.util.List;
@@ -23,12 +24,14 @@ public class ImageAdapter_profile extends RecyclerView.Adapter<ImageAdapter_prof
 
     private Context context;
     private List<Post> postList;
+    private boolean isOwner;
     private static final long DOUBLE_CLICK_TIME_DELTA = 300;
     private long lastClickTime = 0;
 
-    public ImageAdapter_profile(Context context, List<Post> postList) {
+    public ImageAdapter_profile(Context context, List<Post> postList, boolean isOwner) {
         this.context = context;
         this.postList = postList;
+        this.isOwner = isOwner;
     }
 
     @NonNull
@@ -58,7 +61,10 @@ public class ImageAdapter_profile extends RecyclerView.Adapter<ImageAdapter_prof
         holder.postImage.setOnClickListener(v -> {
             long clickTime = System.currentTimeMillis();
             if (clickTime - lastClickTime < DOUBLE_CLICK_TIME_DELTA) {
-                showDeleteDialog(post);
+                // Allow deletion only if isOwner is true or the current user owns the post
+                if (isOwner || post.getUserId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                    showDeleteDialog(post);
+                }
             }
             lastClickTime = clickTime;
         });
@@ -107,7 +113,7 @@ public class ImageAdapter_profile extends RecyclerView.Adapter<ImageAdapter_prof
 
     private void deletePost(Post post) {
         DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
-        postsRef.child(post.getUserId()).removeValue()
+        postsRef.child(post.getPostId()).removeValue()
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(context, "Post deleted successfully", Toast.LENGTH_SHORT).show();
                     postList.remove(post);

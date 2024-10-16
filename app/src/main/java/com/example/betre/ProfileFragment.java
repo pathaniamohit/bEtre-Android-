@@ -81,7 +81,7 @@ public class ProfileFragment extends Fragment {
 
         postsRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 1));
         postList = new ArrayList<>();
-        postAdapter = new ImageAdapter_profile(getContext(), postList);
+        postAdapter = new ImageAdapter_profile(getContext(), postList, true);
         postsRecyclerView.setAdapter(postAdapter);
 
         Log.d(TAG, "onViewCreated: Initializing Firebase components.");
