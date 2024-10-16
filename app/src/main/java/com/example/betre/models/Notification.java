@@ -6,6 +6,8 @@ public class Notification {
     private String username;
     private String content;
     private long timestamp;
+    private String userId;
+
 
     public Notification() {
         // Default constructor required for Firebase
@@ -18,6 +20,20 @@ public class Notification {
         this.content = content;
         this.timestamp = timestamp;
     }
+
+    public Notification(String userId, String postId, String type, String username, String content, long timestamp) {
+        this.type = type;
+        this.userId = userId;
+        this.postId = postId;
+        this.username = username;
+        this.content = content;
+        this.timestamp = timestamp;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
 
     public String getPostId() {
         return postId;

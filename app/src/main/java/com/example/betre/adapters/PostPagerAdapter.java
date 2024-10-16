@@ -200,13 +200,13 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
     }
 
     // Notify user about follow
-    private void notifyUserAboutFollow(String userId) {
-        DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference("notifications").child(userId);
+    private void notifyUserAboutFollow(String followedUserId) {
+        DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference("notifications").child(followedUserId);
         String notificationId = notificationsRef.push().getKey();
 
         HashMap<String, Object> notificationMap = new HashMap<>();
         notificationMap.put("type", "follow");
-        notificationMap.put("username", FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
+        notificationMap.put("userId", FirebaseAuth.getInstance().getCurrentUser().getUid());
         notificationMap.put("timestamp", System.currentTimeMillis());
 
         notificationsRef.child(notificationId).setValue(notificationMap);
@@ -320,7 +320,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
 
                         HashMap<String, Object> notificationMap = new HashMap<>();
                         notificationMap.put("type", "like");
-                        notificationMap.put("username", FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
+                        notificationMap.put("userId", FirebaseAuth.getInstance().getCurrentUser().getUid());  // Current user's ID
                         notificationMap.put("postId", postId);
                         notificationMap.put("timestamp", System.currentTimeMillis());
 
@@ -417,7 +417,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             String commentText = commentInput.getText().toString().trim();
             if (!commentText.isEmpty()) {
                 addCommentToFirebase(postId, commentText, holder);
-                commentInput.setText("");  // Clear the input field after sending
+                commentInput.setText("");
             }
         });
     }
@@ -433,7 +433,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                 for (DataSnapshot commentSnapshot : dataSnapshot.getChildren()) {
                     Comment comment = commentSnapshot.getValue(Comment.class);
                     if (comment != null) {
-                        commentList.add(comment);  // Add the fetched comment to the list
+                        commentList.add(comment);
                     }
                 }
                 // Notify the adapter that the data has changed
@@ -491,20 +491,22 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
         });
     }
 
-    // Notify post owner about the comment
-    private void notifyUserAboutComment(String postId, String commenterUsername, String commentText) {
+    private void notifyUserAboutComment(String postId, String commenterUserId, String commentText) {
         DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
         postRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     String postOwnerId = dataSnapshot.child("userId").getValue(String.class);
-                    if (postOwnerId != null && !postOwnerId.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                    String commenterUsername = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
+
+                    if (postOwnerId != null && !postOwnerId.equals(commenterUserId)) {
                         DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference("notifications").child(postOwnerId);
                         String notificationId = notificationsRef.push().getKey();
 
                         HashMap<String, Object> notificationMap = new HashMap<>();
                         notificationMap.put("type", "comment");
+                        notificationMap.put("userId", commenterUserId);
                         notificationMap.put("username", commenterUsername);
                         notificationMap.put("content", commentText);
                         notificationMap.put("postId", postId);
