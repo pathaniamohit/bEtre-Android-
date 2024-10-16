@@ -13,9 +13,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.betre.models.Post;
@@ -37,11 +39,14 @@ public class SearchFragment extends Fragment {
     private SearchView searchView;
     private TextView searchResult;
     private Button btnGo;
-    private RecyclerView recyclerView;
+    private RecyclerView recyclerView, suggestionsRecyclerView;
     private PostAdapter postAdapter;
     private List<Post> postList;
     private Map<String, String> userIdToUsernameMap;
     private LinearLayout tagsLayout;
+
+    private List<String> usernameSuggestions;
+    private SuggestionsAdapter suggestionsAdapter;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -54,11 +59,18 @@ public class SearchFragment extends Fragment {
         btnGo = view.findViewById(R.id.btnGo);
         recyclerView = view.findViewById(R.id.recyclerView);
         tagsLayout = view.findViewById(R.id.tagsLayout);
+        suggestionsRecyclerView = view.findViewById(R.id.suggestionsRecyclerView);
 
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
         postList = new ArrayList<>();
         postAdapter = new PostAdapter(postList);
         recyclerView.setAdapter(postAdapter);
+
+        // Set up suggestions RecyclerView
+        suggestionsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        usernameSuggestions = new ArrayList<>();
+        suggestionsAdapter = new SuggestionsAdapter(usernameSuggestions);
+        suggestionsRecyclerView.setAdapter(suggestionsAdapter);
 
         userIdToUsernameMap = new HashMap<>();
 
@@ -75,6 +87,21 @@ public class SearchFragment extends Fragment {
             } else {
                 searchResult.setText("Please enter something to search.");
                 fetchPosts("");
+            }
+        });
+
+        // Listen to search query changes
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                fetchPosts(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterUserSuggestions(newText);
+                return false;
             }
         });
 
@@ -147,6 +174,88 @@ public class SearchFragment extends Fragment {
             }
         });
     }
+
+    // Filter the usernames based on search query
+    private void filterUserSuggestions(String query) {
+        usernameSuggestions.clear();
+        if (!query.isEmpty()) {
+            String lowerCaseQuery = query.toLowerCase();
+            for (String userId : userIdToUsernameMap.keySet()) {
+                String username = userIdToUsernameMap.get(userId);
+                if (username.contains(lowerCaseQuery)) {
+                    usernameSuggestions.add(username);
+                }
+            }
+        }
+
+        if (usernameSuggestions.isEmpty()) {
+            suggestionsRecyclerView.setVisibility(View.GONE);
+        } else {
+            suggestionsRecyclerView.setVisibility(View.VISIBLE);
+        }
+
+        suggestionsAdapter.notifyDataSetChanged();
+    }
+
+    // Adapter for displaying username suggestions
+    private class SuggestionsAdapter extends RecyclerView.Adapter<SuggestionsAdapter.SuggestionsViewHolder> {
+        private List<String> suggestions;
+
+        public SuggestionsAdapter(List<String> suggestions) {
+            this.suggestions = suggestions;
+        }
+
+        @NonNull
+        @Override
+        public SuggestionsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_suggestion, parent, false);
+            return new SuggestionsViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull SuggestionsViewHolder holder, int position) {
+            String username = suggestions.get(position);
+            holder.usernameTextView.setText(username);
+
+            holder.itemView.setOnClickListener(v -> openUserProfileFragment(username));
+        }
+
+        @Override
+        public int getItemCount() {
+            return suggestions.size();
+        }
+
+        public class SuggestionsViewHolder extends RecyclerView.ViewHolder {
+            TextView usernameTextView;
+
+            public SuggestionsViewHolder(View itemView) {
+                super(itemView);
+                usernameTextView = itemView.findViewById(R.id.usernameTextView);
+            }
+        }
+    }
+
+    private void openUserProfileFragment(String username) {
+        String userId = getUserIdFromUsername(username);
+        if (userId != null) {
+            UserProfileFragment userProfileFragment = UserProfileFragment.newInstance(userId);
+            ((AppCompatActivity) getContext()).getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.home_content, userProfileFragment)
+                    .addToBackStack(null)
+                    .commit();
+        }
+    }
+
+    private String getUserIdFromUsername(String username) {
+        for (Map.Entry<String, String> entry : userIdToUsernameMap.entrySet()) {
+            if (entry.getValue().equalsIgnoreCase(username)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
 
     // Display random tags for users and locations
     private void displayRandomTags() {
