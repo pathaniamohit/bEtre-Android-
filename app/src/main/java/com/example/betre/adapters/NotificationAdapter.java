@@ -8,9 +8,12 @@ import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 import com.example.betre.R;
 import com.example.betre.models.Notification;
 import com.google.firebase.database.DataSnapshot;
@@ -19,7 +22,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.NotificationViewHolder> {
 
@@ -54,6 +59,15 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     String username = dataSnapshot.child("username").getValue(String.class);
+                    String imageUrl = dataSnapshot.child("profileImageUrl").getValue(String.class);
+
+                    if (imageUrl != null) {
+                        Glide.with(context)
+                                .load(imageUrl)
+                                .circleCrop()
+                                .into(holder.userProfileImage); // Set profile image
+                    }
+
                     if (username != null) {
                         displayNotification(holder, notification, username);
                     } else {
@@ -69,6 +83,12 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 holder.notificationTextView.setText("Invalid notification");
             }
         });
+
+        // Format and display the timestamp
+        SimpleDateFormat sdf = new SimpleDateFormat("h:mm a, MMM d", Locale.getDefault());
+        String formattedDate = sdf.format(notification.getTimestamp());
+        holder.timestampTextView.setText(formattedDate);
+
     }
 
     private void displayNotification(NotificationViewHolder holder, Notification notification, String username) {
@@ -105,14 +125,12 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             spannable.setSpan(new ForegroundColorSpan(Color.RED), 0, username.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             holder.notificationTextView.setText(spannable);
 
-            // Handle "unfollow" notification
         } else if (notification.getType().equals("unfollow")) {
             notificationText = username + " unfollowed you.";
             Spannable spannable = new SpannableString(notificationText);
 
             spannable.setSpan(new ForegroundColorSpan(Color.RED), 0, username.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             holder.notificationTextView.setText(spannable);
-
         } else {
             holder.notificationTextView.setText("Unknown notification type");
         }
@@ -125,11 +143,14 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     public static class NotificationViewHolder extends RecyclerView.ViewHolder {
 
-        TextView notificationTextView;
+        ImageView userProfileImage;
+        TextView notificationTextView, timestampTextView;
 
         public NotificationViewHolder(@NonNull View itemView) {
             super(itemView);
+            userProfileImage = itemView.findViewById(R.id.user_profile_image);
             notificationTextView = itemView.findViewById(R.id.notification_text);
+            timestampTextView = itemView.findViewById(R.id.timestamp);
         }
     }
 }

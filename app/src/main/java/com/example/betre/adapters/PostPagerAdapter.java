@@ -485,7 +485,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                         Log.d("PostPagerAdapter", "Comment successfully added.");
                         incrementCommentCount(postId, holder);
                         // Notify the post owner about the new comment
-                        notifyUserAboutComment(postId, username, commentText);
+                        notifyUserAboutComment(postId, currentUserId, commentText);
                     } else {
                         Log.e("PostPagerAdapter", "Failed to add comment: " + task.getException().getMessage());
                     }
