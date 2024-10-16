@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -19,6 +18,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.example.betre.models.Post;
 import com.google.firebase.database.DataSnapshot;
@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 public class SearchFragment extends Fragment {
 
@@ -45,7 +44,7 @@ public class SearchFragment extends Fragment {
     private Map<String, String> userIdToUsernameMap;
     private LinearLayout tagsLayout;
 
-    private List<String> usernameSuggestions;
+    private List<Suggestion> suggestionList;
     private SuggestionsAdapter suggestionsAdapter;
 
     @SuppressLint("SetTextI18n")
@@ -68,8 +67,8 @@ public class SearchFragment extends Fragment {
 
         // Set up suggestions RecyclerView
         suggestionsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        usernameSuggestions = new ArrayList<>();
-        suggestionsAdapter = new SuggestionsAdapter(usernameSuggestions);
+        suggestionList = new ArrayList<>();
+        suggestionsAdapter = new SuggestionsAdapter(suggestionList);
         suggestionsRecyclerView.setAdapter(suggestionsAdapter);
 
         userIdToUsernameMap = new HashMap<>();
@@ -100,7 +99,7 @@ public class SearchFragment extends Fragment {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                filterUserSuggestions(newText);
+                filterSuggestions(newText);
                 return false;
             }
         });
@@ -175,33 +174,55 @@ public class SearchFragment extends Fragment {
         });
     }
 
-    // Filter the usernames based on search query
-    private void filterUserSuggestions(String query) {
-        usernameSuggestions.clear();
+    // Filter the usernames and locations based on search query
+    private void filterSuggestions(String query) {
+        suggestionList.clear();
         if (!query.isEmpty()) {
             String lowerCaseQuery = query.toLowerCase();
             for (String userId : userIdToUsernameMap.keySet()) {
                 String username = userIdToUsernameMap.get(userId);
                 if (username.contains(lowerCaseQuery)) {
-                    usernameSuggestions.add(username);
+                    suggestionList.add(new Suggestion(username, SuggestionType.USERNAME));
                 }
             }
+
+            // Add locations to suggestions
+            DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
+            postsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        String location = snapshot.child("location").getValue(String.class);
+                        if (location != null && location.toLowerCase().contains(lowerCaseQuery)) {
+                            suggestionList.add(new Suggestion(location, SuggestionType.LOCATION));
+                        }
+                    }
+                    suggestionsAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    Log.e("SearchFragment", "Location fetch error: " + databaseError.getMessage());
+                }
+            });
         }
 
-        if (usernameSuggestions.isEmpty()) {
+        if (suggestionList.isEmpty()) {
             suggestionsRecyclerView.setVisibility(View.GONE);
+            tagsLayout.setVisibility(View.VISIBLE); // Show tags when no suggestions
         } else {
             suggestionsRecyclerView.setVisibility(View.VISIBLE);
+            tagsLayout.setVisibility(View.GONE); // Hide tags when suggestions are present
         }
 
         suggestionsAdapter.notifyDataSetChanged();
     }
 
-    // Adapter for displaying username suggestions
+    // Adapter for displaying username and location suggestions
     private class SuggestionsAdapter extends RecyclerView.Adapter<SuggestionsAdapter.SuggestionsViewHolder> {
-        private List<String> suggestions;
+        private List<Suggestion> suggestions;
 
-        public SuggestionsAdapter(List<String> suggestions) {
+        public SuggestionsAdapter(List<Suggestion> suggestions) {
             this.suggestions = suggestions;
         }
 
@@ -214,10 +235,16 @@ public class SearchFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull SuggestionsViewHolder holder, int position) {
-            String username = suggestions.get(position);
-            holder.usernameTextView.setText(username);
+            Suggestion suggestion = suggestions.get(position);
+            holder.suggestionTextView.setText(suggestion.getText());
 
-            holder.itemView.setOnClickListener(v -> openUserProfileFragment(username));
+            holder.itemView.setOnClickListener(v -> {
+                if (suggestion.getType() == SuggestionType.USERNAME) {
+                    openUserProfileFragment(suggestion.getText());
+                } else if (suggestion.getType() == SuggestionType.LOCATION) {
+                    fetchPosts(suggestion.getText());
+                }
+            });
         }
 
         @Override
@@ -226,13 +253,37 @@ public class SearchFragment extends Fragment {
         }
 
         public class SuggestionsViewHolder extends RecyclerView.ViewHolder {
-            TextView usernameTextView;
+            TextView suggestionTextView;
 
             public SuggestionsViewHolder(View itemView) {
                 super(itemView);
-                usernameTextView = itemView.findViewById(R.id.usernameTextView);
+                suggestionTextView = itemView.findViewById(R.id.suggestionTextView);
             }
         }
+    }
+
+    // Class to store suggestion data
+    private class Suggestion {
+        private String text;
+        private SuggestionType type;
+
+        public Suggestion(String text, SuggestionType type) {
+            this.text = text;
+            this.type = type;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public SuggestionType getType() {
+            return type;
+        }
+    }
+
+    // Enum moved outside the inner class
+    enum SuggestionType {
+        USERNAME, LOCATION
     }
 
     private void openUserProfileFragment(String username) {
@@ -255,7 +306,6 @@ public class SearchFragment extends Fragment {
         }
         return null;
     }
-
 
     // Display random tags for users and locations
     private void displayRandomTags() {
@@ -303,7 +353,6 @@ public class SearchFragment extends Fragment {
             }
         });
     }
-
 
     // RecyclerView Adapter for displaying posts
     public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
