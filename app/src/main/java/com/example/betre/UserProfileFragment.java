@@ -40,6 +40,8 @@ public class UserProfileFragment extends Fragment {
     private ImageAdapter_profile postAdapter;
     private List<Post> postList;
     private String userId;
+    ImageView back_button;
+
 
     public UserProfileFragment() {}
 
@@ -75,6 +77,8 @@ public class UserProfileFragment extends Fragment {
         followersCount = view.findViewById(R.id.followers_count);
         followsCount = view.findViewById(R.id.follows_count);
         postsRecyclerView = view.findViewById(R.id.images_grid);
+        back_button = view.findViewById(R.id.back_button);
+
 
         postsRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 1));
         postList = new ArrayList<>();
@@ -94,6 +98,13 @@ public class UserProfileFragment extends Fragment {
         } else {
             Log.w(TAG, "No userId passed to UserProfileFragment.");
         }
+
+        back_button.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.home_content, new ExploreFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
     }
 
     private void loadUserProfile(String userId) {
