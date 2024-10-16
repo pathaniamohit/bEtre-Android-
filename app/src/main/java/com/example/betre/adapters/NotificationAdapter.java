@@ -104,6 +104,15 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
             spannable.setSpan(new ForegroundColorSpan(Color.RED), 0, username.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             holder.notificationTextView.setText(spannable);
+
+            // Handle "unfollow" notification
+        } else if (notification.getType().equals("unfollow")) {
+            notificationText = username + " unfollowed you.";
+            Spannable spannable = new SpannableString(notificationText);
+
+            spannable.setSpan(new ForegroundColorSpan(Color.RED), 0, username.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            holder.notificationTextView.setText(spannable);
+
         } else {
             holder.notificationTextView.setText("Unknown notification type");
         }

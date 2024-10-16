@@ -289,11 +289,11 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     likeRef.removeValue();
-                    decrementLikeCount(postId);
+                    decrementLikeCount(postId, holder);
                     holder.likeIcon.setImageResource(R.drawable.ic_like);
                 } else {
                     likeRef.setValue(true);
-                    incrementLikeCount(postId);
+                    incrementLikeCount(postId, holder);
                     holder.likeIcon.setImageResource(R.drawable.ic_redlike);
                     notifyUserAboutLike(postId);
                 }
@@ -302,6 +302,62 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e("PostPagerAdapter", "Error toggling like: " + databaseError.getMessage());
+            }
+        });
+    }
+
+    // Increment the like count for a post
+    private void incrementLikeCount(String postId, PostViewHolder holder) {
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
+        postRef.child("count_like").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                Integer currentCount = mutableData.getValue(Integer.class);
+                if (currentCount == null) {
+                    mutableData.setValue(1);
+                } else {
+                    mutableData.setValue(currentCount + 1);
+                }
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
+                if (databaseError != null) {
+                    Log.e("PostPagerAdapter", "Error incrementing like count: " + databaseError.getMessage());
+                } else {
+                    Integer updatedCount = dataSnapshot.getValue(Integer.class);
+                    if (updatedCount != null) {
+                        holder.likeCount.setText(String.valueOf(updatedCount));
+                    }
+                }
+            }
+        });
+    }
+
+    // Decrement the like count for a post
+    private void decrementLikeCount(String postId, PostViewHolder holder) {
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
+        postRef.child("count_like").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                Integer currentCount = mutableData.getValue(Integer.class);
+                if (currentCount != null && currentCount > 0) {
+                    mutableData.setValue(currentCount - 1);
+                }
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
+                if (databaseError != null) {
+                    Log.e("PostPagerAdapter", "Error decrementing like count: " + databaseError.getMessage());
+                } else {
+                    Integer updatedCount = dataSnapshot.getValue(Integer.class);
+                    if (updatedCount != null) {
+                        holder.likeCount.setText(String.valueOf(updatedCount));
+                    }
+                }
             }
         });
     }
@@ -332,53 +388,6 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e("PostPagerAdapter", "Error notifying user: " + databaseError.getMessage());
-            }
-        });
-    }
-
-
-    // Increment the like count for a post
-    private void incrementLikeCount(String postId) {
-        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
-        postRef.child("count_like").runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                Integer currentCount = mutableData.getValue(Integer.class);
-                if (currentCount == null) {
-                    mutableData.setValue(1);
-                } else {
-                    mutableData.setValue(currentCount + 1);
-                }
-                return Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
-                if (databaseError != null) {
-                    Log.e("PostPagerAdapter", "Error incrementing like count: " + databaseError.getMessage());
-                }
-            }
-        });
-    }
-
-    // Decrement the like count for a post
-    private void decrementLikeCount(String postId) {
-        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
-        postRef.child("count_like").runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                Integer currentCount = mutableData.getValue(Integer.class);
-                if (currentCount != null && currentCount > 0) {
-                    mutableData.setValue(currentCount - 1);
-                }
-                return Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
-                if (databaseError != null) {
-                    Log.e("PostPagerAdapter", "Error decrementing like count: " + databaseError.getMessage());
-                }
             }
         });
     }
@@ -576,7 +585,39 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
 
         followersRef.removeValue();
         followingRef.removeValue();
+
+        notifyUserAboutUnfollow(currentUserId, postOwnerId);
     }
+
+    // Notify user about unfollow
+    private void notifyUserAboutUnfollow(String currentUserId, String unfollowedUserId) {
+        DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference("notifications").child(unfollowedUserId);
+        String notificationId = notificationsRef.push().getKey();
+
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUserId);
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String unfollowingUsername = dataSnapshot.child("username").getValue(String.class);  // Get the unfollower's username
+
+                // Create the notification structure
+                HashMap<String, Object> notificationMap = new HashMap<>();
+                notificationMap.put("type", "unfollow");
+                notificationMap.put("userId", currentUserId);
+                notificationMap.put("username", unfollowingUsername);
+                notificationMap.put("timestamp", System.currentTimeMillis());
+
+                // Notification text will be handled in the NotificationAdapter (Unfollow message)
+                notificationsRef.child(notificationId).setValue(notificationMap);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("PostPagerAdapter", "Error retrieving user data for unfollow: " + databaseError.getMessage());
+            }
+        });
+    }
+
 
     @Override
     public int getItemCount() {
