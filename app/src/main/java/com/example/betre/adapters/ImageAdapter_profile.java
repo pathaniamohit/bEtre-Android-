@@ -57,6 +57,12 @@ public class ImageAdapter_profile extends RecyclerView.Adapter<ImageAdapter_prof
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         Post post = postList.get(position);
 
+        if (post.getPostId() == null) {
+            Log.e("ImageAdapter_profile", "postId is null for position: " + position);
+        }
+        Log.e("ImageAdapter_profile", "postId : " + post.getPostId());
+
+
         holder.displayUserInfoLayout.setVisibility(View.GONE);
 
         Glide.with(context)
@@ -166,11 +172,15 @@ public class ImageAdapter_profile extends RecyclerView.Adapter<ImageAdapter_prof
 
     // Method to navigate to Edit_Post_Fragment
     private void openEditPostFragment(String postId) {
-        Edit_Post_Fragment editPostFragment = Edit_Post_Fragment.newInstance(postId, null);
-        ((AppCompatActivity) context).getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.home_content, editPostFragment)
-                .addToBackStack(null)
-                .commit();
+        if (postId != null && !postId.isEmpty()) {
+            Edit_Post_Fragment editPostFragment = Edit_Post_Fragment.newInstance(postId);
+            ((AppCompatActivity) context).getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.home_content, editPostFragment)
+                    .addToBackStack(null)
+                    .commit();
+        } else {
+            Log.e("ImageAdapter_profile", "postId is null or empty when opening Edit_Post_Fragment");
+        }
     }
 }

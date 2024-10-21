@@ -71,6 +71,7 @@ dependencies {
     // Firebase UI for loading StorageReference with Glide
     implementation ("com.firebaseui:firebase-ui-storage:8.0.0")
 
+    implementation ("com.google.android.libraries.places:places:3.1.0")
 
     //constraintlayout
     implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
