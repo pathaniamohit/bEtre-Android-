@@ -99,12 +99,15 @@ public class UserProfileFragment extends Fragment {
             Log.w(TAG, "No userId passed to UserProfileFragment.");
         }
 
-        back_button.setOnClickListener(v -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.home_content, new ExploreFragment())
-                    .addToBackStack(null)
-                    .commit();
-        });
+//        back_button.setOnClickListener(v -> {
+//            getParentFragmentManager().beginTransaction()
+//                    .replace(R.id.home_content, new Fragment())
+//                    .addToBackStack(null)
+//                    .commit();
+//        });
+
+        back_button.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+
     }
 
     private void loadUserProfile(String userId) {
