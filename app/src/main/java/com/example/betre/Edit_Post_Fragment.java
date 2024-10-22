@@ -97,7 +97,7 @@ public class Edit_Post_Fragment extends Fragment {
 
         // Initialize Places API
         if (!Places.isInitialized()) {
-            Places.initialize(requireContext(), "your API key");
+            Places.initialize(requireContext(), "AIzaSyDCjCxf0f11NcCZVrR5XZLxT_xrNdmO7-8");
         }
         PlacesClient placesClient = Places.createClient(requireContext());
 
