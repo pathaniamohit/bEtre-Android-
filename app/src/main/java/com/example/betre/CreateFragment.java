@@ -17,11 +17,20 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.common.api.Status;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
@@ -36,7 +45,9 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,6 +69,8 @@ public class CreateFragment extends Fragment {
     private StorageReference mStorageRef;
     private Uri selectedImageUri;
     private String selectedLocation = "";
+
+    private ActivityResultLauncher<Intent> locationPickerLauncher;
 
     public CreateFragment() {
         // Required empty public constructor
@@ -81,6 +94,24 @@ public class CreateFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference("posts");
         mStorageRef = FirebaseStorage.getInstance().getReference("post_images");
+
+        // Initialize Places API
+        if (!Places.isInitialized()) {
+            Places.initialize(requireContext(), "AIzaSyDCjCxf0f11NcCZVrR5XZLxT_xrNdmO7-8");
+        }
+        PlacesClient placesClient = Places.createClient(requireContext());
+
+        // Set up the location picker launcher
+        locationPickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                Place place = Autocomplete.getPlaceFromIntent(result.getData());
+                selectedLocation = place.getAddress();
+                addLocation.setText(selectedLocation);
+            } else if (result.getResultCode() == AutocompleteActivity.RESULT_ERROR) {
+                Status status = Autocomplete.getStatusFromIntent(result.getData());
+                Toast.makeText(getContext(), "Error: " + status.getStatusMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Nullable
@@ -103,7 +134,9 @@ public class CreateFragment extends Fragment {
 
         selectImage.setOnClickListener(v -> openImagePicker());
 
-        addLocation.setOnClickListener(v -> showLocationDialog());
+//        addLocation.setOnClickListener(v -> showLocationDialog());
+        addLocation.setOnClickListener(v -> openLocationPicker());
+
 
         buttonDiscard.setOnClickListener(v -> resetFields());
 
@@ -156,25 +189,36 @@ public class CreateFragment extends Fragment {
     }
 
 
-    private void showLocationDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_location, null);
-        builder.setView(dialogView);
+//    private void showLocationDialog() {
+//        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+//        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_location, null);
+//        builder.setView(dialogView);
+//
+//        EditText locationInput = dialogView.findViewById(R.id.location_input);
+//        Button buttonContinue = dialogView.findViewById(R.id.button_continue);
+//
+//        AlertDialog dialog = builder.create();
+//
+//        buttonContinue.setOnClickListener(v -> {
+//            selectedLocation = locationInput.getText().toString().trim();
+//            if (!TextUtils.isEmpty(selectedLocation)) {
+//                addLocation.setText(selectedLocation);
+//            }
+//            dialog.dismiss();
+//        });
+//
+//        dialog.show();
+//    }
 
-        EditText locationInput = dialogView.findViewById(R.id.location_input);
-        Button buttonContinue = dialogView.findViewById(R.id.button_continue);
+    private void openLocationPicker() {
+        // Set up the fields to return from the autocomplete intent
+        List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS);
 
-        AlertDialog dialog = builder.create();
+        // Build the autocomplete intent
+        Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields).build(requireContext());
 
-        buttonContinue.setOnClickListener(v -> {
-            selectedLocation = locationInput.getText().toString().trim();
-            if (!TextUtils.isEmpty(selectedLocation)) {
-                addLocation.setText(selectedLocation);
-            }
-            dialog.dismiss();
-        });
-
-        dialog.show();
+        // Launch the autocomplete activity
+        locationPickerLauncher.launch(intent);
     }
 
     private void resetFields() {

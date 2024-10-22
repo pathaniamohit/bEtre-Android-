@@ -300,6 +300,7 @@ public class ProfileFragment extends Fragment {
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     Post post = postSnapshot.getValue(Post.class);
                     if (post != null) {
+                        post.setPostId(postSnapshot.getKey());
                         postList.add(post);
                     }
                 }
