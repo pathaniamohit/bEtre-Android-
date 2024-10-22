@@ -2,12 +2,10 @@ package com.example.betre;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.OpenableColumns;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,8 +23,17 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import com.bumptech.glide.Glide;
 import com.example.betre.models.Post;
 import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
+import com.google.android.gms.common.api.Status;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.appcheck.FirebaseAppCheck;
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -38,23 +45,27 @@ import com.google.firebase.storage.StorageReference;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Edit_Post_Fragment extends Fragment {
 
     private ImageView postImageView, backButton;
     private EditText contentEditText, locationEditText;
-    private MaterialButton updateButton, discardButton;
+    private MaterialButton updateButton;
     private Uri selectedImageUri;
     private DatabaseReference postsRef;
     private StorageReference storageRef;
 
     private String postId;
 
-
     // Define ActivityResultLauncher for image picker
     private ActivityResultLauncher<Intent> imagePickerLauncher;
+
+    // Define ActivityResultLauncher for location autocomplete
+    private ActivityResultLauncher<Intent> locationPickerLauncher;
 
     public Edit_Post_Fragment() {
         // Required empty public constructor
@@ -79,6 +90,17 @@ public class Edit_Post_Fragment extends Fragment {
         postsRef = FirebaseDatabase.getInstance().getReference("posts");
         storageRef = FirebaseStorage.getInstance().getReference("post_images");
 
+        // Initialize Firebase App Check
+        FirebaseAppCheck firebaseAppCheck = FirebaseAppCheck.getInstance();
+        firebaseAppCheck.installAppCheckProviderFactory(
+                PlayIntegrityAppCheckProviderFactory.getInstance());
+
+        // Initialize Places API
+        if (!Places.isInitialized()) {
+            Places.initialize(requireContext(), "your API key");
+        }
+        PlacesClient placesClient = Places.createClient(requireContext());
+
         // Set up the image picker launcher
         imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
@@ -93,6 +115,17 @@ public class Edit_Post_Fragment extends Fragment {
                 }
             } else {
                 Toast.makeText(getContext(), "Failed to pick image", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Set up the location picker launcher
+        locationPickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                Place place = Autocomplete.getPlaceFromIntent(result.getData());
+                locationEditText.setText(place.getAddress());
+            } else if (result.getResultCode() == AutocompleteActivity.RESULT_ERROR) {
+                Status status = Autocomplete.getStatusFromIntent(result.getData());
+                Toast.makeText(getContext(), "Error: " + status.getStatusMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -111,7 +144,6 @@ public class Edit_Post_Fragment extends Fragment {
         contentEditText = view.findViewById(R.id.edit_post_content);
         locationEditText = view.findViewById(R.id.edit_post_location);
         updateButton = view.findViewById(R.id.button_update_post);
-        discardButton = view.findViewById(R.id.button_discard);
         backButton = view.findViewById(R.id.button_back);
 
         // Load post data into the views
@@ -123,11 +155,11 @@ public class Edit_Post_Fragment extends Fragment {
         // Handle update post (upload the image only when "Update" is clicked)
         updateButton.setOnClickListener(v -> updatePostData());
 
-        // Handle discard action
-        discardButton.setOnClickListener(v -> resetFields());
-
         // Handle back button action
         backButton.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+
+        // Handle location edit (open Google Places Autocomplete)
+        locationEditText.setOnClickListener(v -> openLocationPicker());
     }
 
     private void loadPostData() {
@@ -171,6 +203,17 @@ public class Edit_Post_Fragment extends Fragment {
         imagePickerLauncher.launch(intent);
     }
 
+    private void openLocationPicker() {
+        // Set up the fields to return from the autocomplete intent
+        List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS);
+
+        // Build the autocomplete intent
+        Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields).build(requireContext());
+
+        // Launch the autocomplete activity
+        locationPickerLauncher.launch(intent);
+    }
+
     private void updatePostData() {
         String newContent = contentEditText.getText().toString().trim();
         String newLocation = locationEditText.getText().toString().trim();
@@ -186,8 +229,16 @@ public class Edit_Post_Fragment extends Fragment {
         postUpdates.put("location", newLocation);
 
         if (selectedImageUri != null) {
+            // Get the current user ID
+            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
             // Upload the image after resizing
             StorageReference fileRef = storageRef.child(postId + "_" + System.currentTimeMillis());
+
+            // Add metadata to the upload to include the userId
+            StorageMetadata metadata = new StorageMetadata.Builder()
+                    .setCustomMetadata("userId", userId)
+                    .build();
 
             try {
                 InputStream imageStream = requireContext().getContentResolver().openInputStream(selectedImageUri);
@@ -198,7 +249,7 @@ public class Edit_Post_Fragment extends Fragment {
                 originalBitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);  // Compress to 80% quality
                 byte[] imageData = baos.toByteArray();
 
-                fileRef.putBytes(imageData)
+                fileRef.putBytes(imageData, metadata)  // Pass metadata during the upload
                         .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
                             postUpdates.put("imageUrl", uri.toString());
                             savePostUpdates(postUpdates);
@@ -218,7 +269,6 @@ public class Edit_Post_Fragment extends Fragment {
         postsRef.child(postId).updateChildren(postUpdates).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Toast.makeText(getContext(), "Post updated successfully", Toast.LENGTH_SHORT).show();
-                resetFields();
                 requireActivity().getSupportFragmentManager().popBackStack();  // Navigate back
             } else {
                 Toast.makeText(getContext(), "Failed to update post", Toast.LENGTH_SHORT).show();
@@ -226,10 +276,5 @@ public class Edit_Post_Fragment extends Fragment {
         });
     }
 
-    private void resetFields() {
-        contentEditText.setText("");
-        locationEditText.setText("");
-        postImageView.setImageResource(R.drawable.sample_image);
-        selectedImageUri = null;
-    }
+
 }
