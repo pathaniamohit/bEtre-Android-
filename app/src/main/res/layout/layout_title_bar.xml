@@ -13,19 +13,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:textAlignment="center"
         android:fontFamily="@font/amarante_font"
         android:text="@string/betre"
         android:textColor="@color/black"
         android:textSize="40sp"
         android:textStyle="bold" />
-
-    <ImageButton
-        android:id="@+id/message_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_message"
-        android:layout_marginTop="-5dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Message Icon"/>
 </LinearLayout>
 
