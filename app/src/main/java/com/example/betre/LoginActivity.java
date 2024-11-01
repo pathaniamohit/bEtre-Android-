@@ -176,6 +176,8 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(new Intent(LoginActivity.this, AdminActivity.class));
         } else if (role.equals("user")) {
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
+        } else if (role.equals("moderator")) {
+            startActivity(new Intent(LoginActivity.this, ModeratorActivity.class));
         } else {
             Toast.makeText(LoginActivity.this, "Unknown role.", Toast.LENGTH_SHORT).show();
         }
