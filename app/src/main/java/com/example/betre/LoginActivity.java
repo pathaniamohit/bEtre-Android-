@@ -115,32 +115,61 @@ public class LoginActivity extends AppCompatActivity {
         }).addOnFailureListener(e -> Toast.makeText(LoginActivity.this, "Login failed!", Toast.LENGTH_SHORT).show());
     }
 
+//    private void checkUserRole(String userId) {
+//        UsersDB.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                if (snapshot.exists()) {
+//                    String role = snapshot.child("role").getValue(String.class);
+//                    if (role != null) {
+//                        Log.d(TAG, "User role found: " + role);
+//                        navigateBasedOnRole(role);
+//                    } else {
+//                        Log.e(TAG, "Role not found for user");
+//                        Toast.makeText(LoginActivity.this, "User role not found.", Toast.LENGTH_SHORT).show();
+//                    }
+//                } else {
+//                    Log.e(TAG, "User not found in database");
+//                    Toast.makeText(LoginActivity.this, "User not found.", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//                Log.e(TAG, "Error checking user role: " + error.getMessage());
+//                Toast.makeText(LoginActivity.this, "Error checking user role.", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
+
     private void checkUserRole(String userId) {
         UsersDB.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     String role = snapshot.child("role").getValue(String.class);
-                    if (role != null) {
-                        Log.d(TAG, "User role found: " + role);
+                    Boolean suspended = snapshot.child("suspended").getValue(Boolean.class);
+
+                    if (suspended != null && suspended) {
+                        Toast.makeText(LoginActivity.this, "Your account is suspended.", Toast.LENGTH_SHORT).show();
+                        FirebaseAuth.getInstance().signOut(); // Sign out the user
+                    } else if (role != null) {
                         navigateBasedOnRole(role);
                     } else {
-                        Log.e(TAG, "Role not found for user");
                         Toast.makeText(LoginActivity.this, "User role not found.", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Log.e(TAG, "User not found in database");
                     Toast.makeText(LoginActivity.this, "User not found.", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "Error checking user role: " + error.getMessage());
                 Toast.makeText(LoginActivity.this, "Error checking user role.", Toast.LENGTH_SHORT).show();
             }
         });
     }
+
 
     private void navigateBasedOnRole(String role) {
         if (role.equals("admin")) {

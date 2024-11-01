@@ -1,13 +1,29 @@
 package com.example.betre.models;
 
+import com.google.firebase.database.Exclude;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class User {
     private String userId;
     private String username;
     private String email;
     private String profileImageUrl;
     private String phone;
+    private String phoneNumber;
+    private String bio;
     private String gender;
     private String role;
+    private Boolean suspended;
+    private Integer warnings;
+    private Boolean banned;
+    private Map<String, Object> additionalProperties = new HashMap<>();
+
+    @Exclude
+    public Map<String, Object> getAdditionalProperties() {
+        return additionalProperties;
+    }
 
     public User() {}
 
@@ -25,6 +41,7 @@ public class User {
         this.gender = gender;
         this.role = role;
     }
+
 
     public String getUserId() {
         return userId;
@@ -80,4 +97,57 @@ public class User {
     public void setRole(String role) {
         this.role = role;
     }
+
+    public Boolean getSuspended() {
+        return suspended != null ? suspended : false;
+    }
+
+    public void setSuspended(Boolean suspended) {
+        this.suspended = suspended;
+    }
+
+    public Integer getWarnings() {
+        return warnings;
+    }
+
+    public void setWarnings(Integer warnings) {
+        this.warnings = warnings;
+    }
+
+    public Boolean getBanned() {
+        return banned;
+    }
+
+    public void setBanned(Boolean banned) {
+        this.banned = banned;
+    }
+
+//    @Exclude
+//    public Map<String, Object> getAdditionalProperties() {
+//        return additionalProperties;
+//    }
+
+    public void setAdditionalProperty(String key, Object value) {
+        this.additionalProperties.put(key, value);
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+
+
 }
+

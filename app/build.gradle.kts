@@ -52,7 +52,7 @@ dependencies {
 
     implementation(libs.firebase.database)// RecyclerView dependency
     implementation ("androidx.recyclerview:recyclerview:1.2.1")
-
+    implementation("com.google.firebase:firebase-functions")
 
 
     // Add the Firebase BOM
@@ -63,6 +63,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore:+")
     implementation("com.google.firebase:firebase-storage:+")
     implementation("com.google.firebase:firebase-messaging:+")
+    implementation("androidx.recyclerview:recyclerview:1.2.1")
 
     // Glide dependency
     implementation ("com.github.bumptech.glide:glide:4.15.1")

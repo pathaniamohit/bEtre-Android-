@@ -18,16 +18,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BEtre"
         tools:targetApi="31">
+        <activity
+            android:name=".AnalyticsAdminFragment"
+            android:exported="false" />
+        <activity
+            android:name=".FlaggedAdminFragment"
+            android:exported="false" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDCjCxf0f11NcCZVrR5XZLxT_xrNdmO7-8" />
-
-
         <meta-data
             android:name="firebase_app_check_debug_mode"
             android:value="true" />
-
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="default_channel_id" />
@@ -55,10 +58,10 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

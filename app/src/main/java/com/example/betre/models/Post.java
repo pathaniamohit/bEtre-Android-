@@ -83,6 +83,12 @@ public class Post {
     public void setPostId(String postId) {
         this.postId = postId;
     }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+
 }
 
 
