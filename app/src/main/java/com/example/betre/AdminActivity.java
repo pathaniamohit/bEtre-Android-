@@ -50,6 +50,7 @@ public class AdminActivity extends AppCompatActivity {
         fragmentMap.put(R.id.navigation_activity, new ActivityAdminFragment());
         fragmentMap.put(R.id.navigation_inbox_admin, new InboxAdminFragment());
         fragmentMap.put(R.id.navigation_profile_admin, new ProfileAdminFragment());
+        fragmentMap.put(R.id.navigation_flagged, new FlaggedAdminFragment());
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()

@@ -183,6 +183,7 @@ public class SignupPage extends AppCompatActivity {
                     String userId = user.getUid();
 
                     User newUser = new User(name, email, phone, gender, "user");
+                    newUser.setSuspended(false);
                     Log.d(TAG, "User created successfully with ID: " + userId);
 
                     UsersDB.child(userId).setValue(newUser).addOnCompleteListener(new OnCompleteListener<Void>() {
