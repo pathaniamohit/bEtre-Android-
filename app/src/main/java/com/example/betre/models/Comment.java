@@ -1,6 +1,7 @@
 package com.example.betre.models;
 
 public class Comment {
+    private String commentId;
     private String userId;
     private String username;
     private String content;
@@ -47,5 +48,13 @@ public class Comment {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getCommentId() {
+        return commentId;
+    }
+
+    public void setCommentId(String commentId) {
+        this.commentId = commentId;
     }
 }

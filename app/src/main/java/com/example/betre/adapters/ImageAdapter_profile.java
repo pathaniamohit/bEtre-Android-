@@ -75,6 +75,7 @@ public class ImageAdapter_profile extends RecyclerView.Adapter<ImageAdapter_prof
         holder.commentCount.setText(String.valueOf(post.getCount_comment()));
         holder.postLocation.setText(post.getLocation());
 
+
         holder.postImage.setOnClickListener(v -> {
             long currentTime = System.currentTimeMillis();
 

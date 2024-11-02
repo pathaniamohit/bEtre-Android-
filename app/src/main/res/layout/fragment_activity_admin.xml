@@ -15,17 +15,34 @@
 <!-- File: app/src/main/res/layout/fragment_activity_admin.xml -->
 
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/activity_admin_fragment"
+<!--<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    android:id="@+id/activity_admin_fragment"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent">-->
+
+<!--    <androidx.recyclerview.widget.RecyclerView-->
+<!--        android:id="@+id/recyclerViewAdminPosts"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:padding="8dp"-->
+<!--        android:scrollbars="vertical" />-->
+
+<!--</FrameLayout>-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <SearchView
+        android:id="@+id/admin_search_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:queryHint="Search by username or keyword" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewAdminPosts"
+        android:id="@+id/reported_posts_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="8dp"
-        android:scrollbars="vertical" />
+        android:layout_height="wrap_content" />
 
-</FrameLayout>
-
+</LinearLayout>

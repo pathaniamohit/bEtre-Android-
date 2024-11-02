@@ -1,184 +1,266 @@
-//package com.example.betre;
-//
-//import android.os.Bundle;
-//
-//import androidx.fragment.app.Fragment;
-//
-//import android.view.LayoutInflater;
-//import android.view.View;
-//import android.view.ViewGroup;
-//
-///**
-// * A simple {@link Fragment} subclass.
-// * Use the {@link ActivityAdminFragment#newInstance} factory method to
-// * create an instance of this fragment.
-// */
-//public class ActivityAdminFragment extends Fragment {
-//
-//    // TODO: Rename parameter arguments, choose names that match
-//    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-//    private static final String ARG_PARAM1 = "param1";
-//    private static final String ARG_PARAM2 = "param2";
-//
-//    // TODO: Rename and change types of parameters
-//    private String mParam1;
-//    private String mParam2;
-//
-//    public ActivityAdminFragment() {
-//        // Required empty public constructor
-//    }
-//
-//    /**
-//     * Use this factory method to create a new instance of
-//     * this fragment using the provided parameters.
-//     *
-//     * @param param1 Parameter 1.
-//     * @param param2 Parameter 2.
-//     * @return A new instance of fragment ActivityAdminFragment.
-//     */
-//    // TODO: Rename and change types and number of parameters
-//    public static ActivityAdminFragment newInstance(String param1, String param2) {
-//        ActivityAdminFragment fragment = new ActivityAdminFragment();
-//        Bundle args = new Bundle();
-//        args.putString(ARG_PARAM1, param1);
-//        args.putString(ARG_PARAM2, param2);
-//        fragment.setArguments(args);
-//        return fragment;
-//    }
-//
-//    @Override
-//    public void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        if (getArguments() != null) {
-//            mParam1 = getArguments().getString(ARG_PARAM1);
-//            mParam2 = getArguments().getString(ARG_PARAM2);
-//        }
-//    }
-//
-//    @Override
-//    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//                             Bundle savedInstanceState) {
-//        // Inflate the layout for this fragment
-//        return inflater.inflate(R.layout.fragment_activity_admin, container, false);
-//    }
-//}
 
-// File: app/src/main/java/com/example/betre/ActivityAdminFragment.java
 package com.example.betre;
 
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import android.widget.SearchView;
 
-import com.example.betre.adapters.AdminPostAdapter;
+import androidx.fragment.app.Fragment;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.betre.adapters.ReportedPostAdapter;
 import com.example.betre.models.Post;
-import com.google.firebase.auth.FirebaseAuth;
+import com.example.betre.models.ReportedPost;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+// Import other necessary packages
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-/**
- * A fragment to display all posts for admin management.
- */
+//public class ActivityAdminFragment extends Fragment {
+//
+//    private RecyclerView recyclerView;
+//    private ReportedPostAdapter adapter;
+//    private List<ReportedPost> reportedPostList;
+//    private DatabaseReference reportsRef;
+//
+//    @Override
+//    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+//                             Bundle savedInstanceState){
+//        View view = inflater.inflate(R.layout.fragment_activity_admin, container, false);
+//
+//        recyclerView = view.findViewById(R.id.reported_posts_recycler_view);
+//        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+//        reportedPostList = new ArrayList<>();
+//        adapter = new ReportedPostAdapter(reportedPostList, getContext());
+//        recyclerView.setAdapter(adapter);
+//
+//        reportsRef = FirebaseDatabase.getInstance().getReference("reports");
+//
+//        fetchReportedPosts();
+//
+//        return view;
+//    }
+//
+//    private void fetchReportedPosts() {
+//        reportsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot reportsSnapshot) {
+//                reportedPostList.clear();
+//                for (DataSnapshot postSnapshot : reportsSnapshot.getChildren()) {
+//                    String postId = postSnapshot.getKey();
+//                    Map<String, String> reports = new HashMap<>();
+//                    for (DataSnapshot userSnapshot : postSnapshot.getChildren()) {
+//                        String userId = userSnapshot.getKey();
+//                        Object value = userSnapshot.getValue();
+//
+//                        String reportReason = "";
+//
+//                        if (value instanceof String) {
+//                            // The report reason is stored as a simple String
+//                            reportReason = (String) value;
+//                        } else if (value instanceof Map) {
+//                            // The report reason is stored as a Map (HashMap)
+//                            Map<String, Object> reportData = (Map<String, Object>) value;
+//                            reportReason = (String) reportData.get("reason");
+//                        } else {
+//                            // Handle unexpected data types
+//                            Log.e("ActivityAdminFragment", "Unexpected data type for report reason.");
+//                        }
+//
+//                        if (reportReason != null) {
+//                            reports.put(userId, reportReason);
+//                        }
+//                    }
+//
+//                    // Fetch the post details
+//                    DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
+//                    postRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//                        @Override
+//                        public void onDataChange(DataSnapshot postSnapshot) {
+//                            Post post = postSnapshot.getValue(Post.class);
+//                            ReportedPost reportedPost = new ReportedPost();
+//                            reportedPost.setPostId(postId);
+//                            reportedPost.setPost(post);
+//                            reportedPost.setReports(reports);
+//
+//                            reportedPostList.add(reportedPost);
+//                            adapter.notifyDataSetChanged();
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(DatabaseError databaseError) {
+//                            Log.e("ActivityAdminFragment", "Error fetching post details: " + databaseError.getMessage());
+//                        }
+//                    });
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                Log.e("ActivityAdminFragment", "Error fetching reports: " + databaseError.getMessage());
+//            }
+//        });
+//    }
+//}
 public class ActivityAdminFragment extends Fragment {
 
-    private RecyclerView recyclerViewAdminPosts;
-    private AdminPostAdapter adminPostAdapter;
-    private List<Post> postList;
-
-    private DatabaseReference postsReference;
-    private ValueEventListener postsListener;
-
-    public ActivityAdminFragment() {
-        // Required empty public constructor
-    }
-
-    public static ActivityAdminFragment newInstance() {
-        ActivityAdminFragment fragment = new ActivityAdminFragment();
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        // Initialize Firebase reference
-        postsReference = FirebaseDatabase.getInstance().getReference("posts");
-    }
+    private RecyclerView recyclerView;
+    private ReportedPostAdapter adapter;
+    private List<ReportedPost> reportedPostList;
+    private List<ReportedPost> filteredPostList; // For search functionality
+    private DatabaseReference reportsRef;
+    private SearchView searchView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.fragment_activity_admin, container, false);
 
-        recyclerViewAdminPosts = view.findViewById(R.id.recyclerViewAdminPosts);
-        recyclerViewAdminPosts.setLayoutManager(new LinearLayoutManager(getContext()));
-        postList = new ArrayList<>();
-        adminPostAdapter = new AdminPostAdapter(getContext(), postList);
-        recyclerViewAdminPosts.setAdapter(adminPostAdapter);
+        recyclerView = view.findViewById(R.id.reported_posts_recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        reportedPostList = new ArrayList<>();
+        filteredPostList = new ArrayList<>();
+        adapter = new ReportedPostAdapter(filteredPostList, getContext());
+        recyclerView.setAdapter(adapter);
 
-        loadAllPosts();
+        searchView = view.findViewById(R.id.admin_search_view);
+
+        reportsRef = FirebaseDatabase.getInstance().getReference("reports");
+
+        fetchReportedPosts();
+
+        setupSearchView();
 
         return view;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadAllPosts();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        detachListener();
-    }
-
-    /**
-     * Fetch all posts from Firebase and populate the RecyclerView.
-     */
-    private void loadAllPosts(){
-        postsListener = new ValueEventListener(){
+    private void fetchReportedPosts() {
+        reportsRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot){
-                postList.clear();
-                for(DataSnapshot dataSnapshot : snapshot.getChildren()){
-                    Post post = dataSnapshot.getValue(Post.class);
-                    if(post != null){
-                        post.setPostId(dataSnapshot.getKey());
-                        postList.add(post);
+            public void onDataChange(DataSnapshot reportsSnapshot) {
+                reportedPostList.clear();
+                for (DataSnapshot postSnapshot : reportsSnapshot.getChildren()) {
+                    String postId = postSnapshot.getKey();
+                    Map<String, String> reports = new HashMap<>();
+                    for (DataSnapshot userSnapshot : postSnapshot.getChildren()) {
+                        String userId = userSnapshot.getKey();
+                        Object value = userSnapshot.getValue();
+
+                        String reportReason = "";
+
+                        if (value instanceof String) {
+                            // The report reason is stored as a simple String
+                            reportReason = (String) value;
+                        } else if (value instanceof Map) {
+                            // The report reason is stored as a Map (HashMap)
+                            Map<String, Object> reportData = (Map<String, Object>) value;
+                            reportReason = (String) reportData.get("reason");
+                        } else {
+                            // Handle unexpected data types
+                            Log.e("ActivityAdminFragment", "Unexpected data type for report reason.");
+                        }
+
+                        if (reportReason != null) {
+                            reports.put(userId, reportReason);
+                        }
                     }
+
+                    // Fetch the post details
+                    DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(postId);
+                    postRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot postSnapshot) {
+                            Post post = postSnapshot.getValue(Post.class);
+                            ReportedPost reportedPost = new ReportedPost();
+                            reportedPost.setPostId(postId);
+                            reportedPost.setPost(post);
+                            reportedPost.setReports(reports);
+
+                            reportedPostList.add(reportedPost);
+                            filteredPostList.add(reportedPost); // Initially, filtered list contains all posts
+                            adapter.notifyDataSetChanged();
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.e("ActivityAdminFragment", "Error fetching post details: " + databaseError.getMessage());
+                        }
+                    });
                 }
-                adminPostAdapter.notifyDataSetChanged();
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error){
-                Toast.makeText(getContext(), "Failed to load posts.", Toast.LENGTH_SHORT).show();
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e("ActivityAdminFragment", "Error fetching reports: " + databaseError.getMessage());
             }
-        };
-
-        postsReference.addValueEventListener(postsListener);
+        });
     }
 
-    /**
-     * Remove the Firebase listener to prevent memory leaks.
-     */
-    private void detachListener(){
-        if(postsListener != null){
-            postsReference.removeEventListener(postsListener);
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                // Perform the final search
+                filterPosts(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                // Perform search as the user types
+                filterPosts(newText);
+                return true;
+            }
+        });
+    }
+
+    private void filterPosts(String query) {
+        filteredPostList.clear();
+        if (query.isEmpty()) {
+            filteredPostList.addAll(reportedPostList);
+        } else {
+            String lowerCaseQuery = query.toLowerCase();
+            for (ReportedPost reportedPost : reportedPostList) {
+                Post post = reportedPost.getPost();
+                if (post != null) {
+                    boolean matchesContent = post.getContent() != null && post.getContent().toLowerCase().contains(lowerCaseQuery);
+                    boolean matchesLocation = post.getLocation() != null && post.getLocation().toLowerCase().contains(lowerCaseQuery);
+
+                    // Fetch the username of the post owner
+                    DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(post.getUserId());
+                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            String username = dataSnapshot.child("username").getValue(String.class);
+                            boolean matchesUsername = username != null && username.toLowerCase().contains(lowerCaseQuery);
+
+                            if (matchesContent || matchesLocation || matchesUsername) {
+                                filteredPostList.add(reportedPost);
+                                adapter.notifyDataSetChanged();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e("ActivityAdminFragment", "Error fetching username: " + databaseError.getMessage());
+                        }
+                    });
+                }
+            }
         }
+        adapter.notifyDataSetChanged();
     }
 }
