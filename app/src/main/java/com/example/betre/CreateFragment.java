@@ -243,10 +243,10 @@ public class CreateFragment extends Fragment {
             return;
         }
 
-        if (TextUtils.isEmpty(selectedLocation)) {
-            Toast.makeText(getActivity(), "Please add a location", Toast.LENGTH_SHORT).show();
-            return;
-        }
+//        if (TextUtils.isEmpty(selectedLocation)) {
+//            Toast.makeText(getActivity(), "Please add a location", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
 
         uploadImageAndCreatePost(content);
     }
@@ -270,6 +270,43 @@ public class CreateFragment extends Fragment {
                 });
     }
 
+//    private void createPostInDatabase(String content, @Nullable String imageUrl) {
+//        String userId = mAuth.getCurrentUser().getUid();
+//        String postId = mDatabase.push().getKey();
+//
+//        if (postId == null) {
+//            Toast.makeText(getActivity(), "Error: Could not generate post ID. Try again.", Toast.LENGTH_LONG).show();
+//            return;
+//        }
+//
+//        Map<String, Object> postMap = new HashMap<>();
+//        postMap.put("userId", userId);
+//        postMap.put("content", content);
+//        postMap.put("location", selectedLocation);
+//        postMap.put("timestamp", System.currentTimeMillis());
+//
+//        if (imageUrl != null) {
+//            postMap.put("imageUrl", imageUrl);
+//        }
+//
+//        postMap.put("count_like", 0);
+//        postMap.put("count_comment", 0);
+//        postMap.put("is_reported", false);
+//
+//        mDatabase.child(postId).setValue(postMap)
+//                .addOnCompleteListener(task -> {
+//                    if (task.isSuccessful()) {
+//                        Toast.makeText(getActivity(), "Post created successfully", Toast.LENGTH_SHORT).show();
+//                        resetFields();
+//                    } else {
+//                        Toast.makeText(getActivity(), "Failed to create post", Toast.LENGTH_SHORT).show();
+//                    }
+//                })
+//                .addOnFailureListener(e -> {
+//                    Toast.makeText(getActivity(), "Database error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+//                });
+//    }
+
     private void createPostInDatabase(String content, @Nullable String imageUrl) {
         String userId = mAuth.getCurrentUser().getUid();
         String postId = mDatabase.push().getKey();
@@ -282,7 +319,12 @@ public class CreateFragment extends Fragment {
         Map<String, Object> postMap = new HashMap<>();
         postMap.put("userId", userId);
         postMap.put("content", content);
-        postMap.put("location", selectedLocation);
+
+        // Only add the location if it's not empty
+        if (!TextUtils.isEmpty(selectedLocation)) {
+            postMap.put("location", selectedLocation);
+        }
+
         postMap.put("timestamp", System.currentTimeMillis());
 
         if (imageUrl != null) {
@@ -306,6 +348,7 @@ public class CreateFragment extends Fragment {
                     Toast.makeText(getActivity(), "Database error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
+
 
 
     private void loadUserProfile(String userId) {

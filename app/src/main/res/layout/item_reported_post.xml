@@ -1,0 +1,113 @@
+<!--<?xml version="1.0" encoding="utf-8"?>-->
+<!--&lt;!&ndash; item_reported_post.xml &ndash;&gt;-->
+<!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="wrap_content"-->
+<!--    android:orientation="vertical"-->
+<!--    android:padding="16dp">-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/reported_post_image"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:scaleType="centerCrop" />-->
+
+<!--    <TextView-->
+<!--        android:id="@+id/reported_post_description"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Post Description"-->
+<!--        android:textSize="16sp"-->
+<!--        android:paddingTop="8dp" />-->
+
+<!--    <TextView-->
+<!--        android:id="@+id/reported_post_location"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Location"-->
+<!--        android:textSize="14sp" />-->
+
+<!--    <TextView-->
+<!--        android:id="@+id/report_count"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Reports: 0"-->
+<!--        android:textSize="14sp"-->
+<!--        android:paddingTop="4dp" />-->
+
+<!--    <Button-->
+<!--        android:id="@+id/view_reports_button"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="View Reports"-->
+<!--        android:layout_marginTop="8dp" />-->
+
+<!--    <Button-->
+<!--        android:id="@+id/delete_post_button"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Delete Post"-->
+<!--        android:layout_marginTop="8dp" />-->
+
+<!--</LinearLayout>-->
+
+<!-- item_reported_post.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/reported_post_image"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop" />
+
+    <TextView
+        android:id="@+id/reported_post_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Post Description"
+        android:textSize="16sp"
+        android:paddingTop="8dp" />
+
+    <TextView
+        android:id="@+id/reported_post_location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Location"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/report_count"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Reports: 0"
+        android:textSize="14sp"
+        android:paddingTop="4dp" />
+
+    <Button
+        android:id="@+id/view_reports_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="View Reports"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/delete_post_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete Post"
+        android:layout_marginTop="8dp"
+         />
+
+    <Button
+        android:id="@+id/dismiss_report_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Dismiss Report"
+        android:layout_marginTop="8dp"
+        />
+
+</LinearLayout>

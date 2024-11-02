@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.betre.models.Post;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -30,8 +31,10 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class SearchFragment extends Fragment {
 
@@ -46,6 +49,7 @@ public class SearchFragment extends Fragment {
 
     private List<Suggestion> suggestionList;
     private SuggestionsAdapter suggestionsAdapter;
+    private DatabaseReference followingReference;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -70,6 +74,8 @@ public class SearchFragment extends Fragment {
         suggestionList = new ArrayList<>();
         suggestionsAdapter = new SuggestionsAdapter(suggestionList);
         suggestionsRecyclerView.setAdapter(suggestionsAdapter);
+        followingReference = FirebaseDatabase.getInstance().getReference("following");
+
 
         userIdToUsernameMap = new HashMap<>();
 
@@ -106,6 +112,7 @@ public class SearchFragment extends Fragment {
 
         // Fetch and display random tags for locations and users
         displayRandomTags();
+        followingReference = FirebaseDatabase.getInstance().getReference("following");
 
         return view;
     }
@@ -135,44 +142,111 @@ public class SearchFragment extends Fragment {
     }
 
     // Fetch posts from Firebase Realtime Database with optional filtering by username or location
+//    private void fetchPosts(String query) {
+//        DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
+//
+//        postsRef.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                postList.clear();
+//
+//                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+//                    Post post = snapshot.getValue(Post.class);
+//
+//                    if (post == null) continue;
+//
+//                    String lowerCaseQuery = query.toLowerCase();
+//
+//                    if (query.isEmpty()) {
+//                        postList.add(post);
+//                    } else {
+//                        if (post.getLocation() != null && post.getLocation().toLowerCase().contains(lowerCaseQuery)) {
+//                            postList.add(post);
+//                        } else {
+//                            String postUserId = post.getUserId();
+//                            String username = userIdToUsernameMap.get(postUserId);
+//                            if (username != null && username.contains(lowerCaseQuery)) {
+//                                postList.add(post);
+//                            }
+//                        }
+//                    }
+//                }
+//                postAdapter.notifyDataSetChanged();
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                Log.e("SearchFragment", "Database error: " + databaseError.getMessage());
+//            }
+//        });
+//    }
+
     private void fetchPosts(String query) {
-        DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        postsRef.addValueEventListener(new ValueEventListener() {
+        // First, get the list of user IDs that the current user is following
+        followingReference.child(currentUserId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                postList.clear();
-
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Post post = snapshot.getValue(Post.class);
-
-                    if (post == null) continue;
-
-                    String lowerCaseQuery = query.toLowerCase();
-
-                    if (query.isEmpty()) {
-                        postList.add(post);
-                    } else {
-                        if (post.getLocation() != null && post.getLocation().toLowerCase().contains(lowerCaseQuery)) {
-                            postList.add(post);
-                        } else {
-                            String postUserId = post.getUserId();
-                            String username = userIdToUsernameMap.get(postUserId);
-                            if (username != null && username.contains(lowerCaseQuery)) {
-                                postList.add(post);
-                            }
-                        }
+            public void onDataChange(DataSnapshot followingSnapshot) {
+                Set<String> followingUserIds = new HashSet<>();
+                for (DataSnapshot userSnapshot : followingSnapshot.getChildren()) {
+                    Boolean isFollowing = userSnapshot.getValue(Boolean.class);
+                    if (isFollowing != null && isFollowing) {
+                        followingUserIds.add(userSnapshot.getKey());
                     }
                 }
-                postAdapter.notifyDataSetChanged();
+
+                // Now, fetch posts from users that the current user is NOT following
+                DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
+                postsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        postList.clear();
+
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            Post post = snapshot.getValue(Post.class);
+
+                            if (post == null) continue;
+
+                            String postUserId = post.getUserId();
+                            // Skip posts from users the current user is following
+                            if (followingUserIds.contains(postUserId) || postUserId.equals(currentUserId)) {
+                                continue;
+                            }
+
+                            String lowerCaseQuery = query.toLowerCase();
+
+                            if (query.isEmpty()) {
+                                postList.add(post);
+                            } else {
+                                if (post.getLocation() != null && post.getLocation().toLowerCase().contains(lowerCaseQuery)) {
+                                    postList.add(post);
+                                } else {
+                                    String username = userIdToUsernameMap.get(postUserId);
+                                    if (username != null && username.contains(lowerCaseQuery)) {
+                                        postList.add(post);
+                                    }
+                                }
+                            }
+                        }
+                        postAdapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e("SearchFragment", "Database error: " + databaseError.getMessage());
+                    }
+                });
+
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.e("SearchFragment", "Database error: " + databaseError.getMessage());
+                Log.e("SearchFragment", "Error fetching following users: " + databaseError.getMessage());
             }
         });
     }
+
 
     // Filter the usernames and locations based on search query
     private void filterSuggestions(String query) {
