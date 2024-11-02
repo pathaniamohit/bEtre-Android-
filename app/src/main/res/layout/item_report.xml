@@ -1,0 +1,33 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/reporter_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reporter Info"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/report_reason"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reason" />
+
+    <TextView
+        android:id="@+id/reported_user_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reported User ID" />
+
+    <Button
+        android:id="@+id/dismiss_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Dismiss"
+        android:layout_marginTop="8dp" />
+</LinearLayout>
