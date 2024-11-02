@@ -19,6 +19,9 @@
         android:theme="@style/Theme.BEtre"
         tools:targetApi="31">
         <activity
+            android:name=".ModeratorActivity"
+            android:exported="false" />
+        <activity
             android:name=".AnalyticsAdminFragment"
             android:exported="false" />
         <activity
