@@ -227,6 +227,7 @@ public class ActivityAdminFragment extends Fragment {
         });
     }
 
+
     private void filterPosts(String query) {
         filteredPostList.clear();
         if (query.isEmpty()) {
