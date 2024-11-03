@@ -1,5 +1,7 @@
 package com.example.betre.models;
 
+import java.util.Map;
+
 public class Post {
 
     private String userName;
@@ -14,6 +16,7 @@ public class Post {
     private long timestamp;
     private String userId;
     private String postId;
+    private Map<String, Comment> comments;
 
     public Post() {
     }
@@ -88,7 +91,13 @@ public class Post {
         this.content = content;
     }
 
+    public Map<String, Comment> getComments() {
+        return comments;
+    }
 
+    public void setComments(Map<String, Comment> comments) {
+        this.comments = comments;
+    }
 }
 
 
