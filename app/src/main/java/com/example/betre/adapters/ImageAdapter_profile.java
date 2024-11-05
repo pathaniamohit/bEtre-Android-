@@ -1,5 +1,3 @@
-
-
 package com.example.betre.adapters;
 
 import android.content.Context;
@@ -183,7 +181,7 @@ public class ImageAdapter_profile extends RecyclerView.Adapter<ImageAdapter_prof
 
     public static class ImageViewHolder extends RecyclerView.ViewHolder {
         ImageView userProfileImage, postImage, commentIcon, likeIcon, reportIcon;
-//        Button followButton;
+
         LinearLayout userProfileLayout;
         TextView userName, userEmail, postDescription, likeCount, commentCount, postLocation;
 

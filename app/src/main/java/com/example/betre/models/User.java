@@ -1,4 +1,3 @@
-
 package com.example.betre.models;
 
 import com.google.firebase.database.Exclude;

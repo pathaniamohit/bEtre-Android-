@@ -1,5 +1,3 @@
-
-
 package com.example.betre.adapters;
 
 import android.content.Context;
