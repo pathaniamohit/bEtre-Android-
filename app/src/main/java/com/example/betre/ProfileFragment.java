@@ -199,6 +199,8 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+
+
     private void loadUserProfile(String userId) {
         Log.d(TAG, "loadUserProfile: Fetching user profile data for userId: " + userId);
         mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -206,22 +208,29 @@ public class ProfileFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     Log.d(TAG, "onDataChange: User data found.");
-                    User user = dataSnapshot.getValue(User.class);
-                    if (user != null) {
-                        Log.d(TAG, "onDataChange: Setting user profile data.");
-                        profileName.setText(user.getUsername() != null ? user.getUsername() : "Username");
-                        profileEmail.setText(user.getEmail() != null ? user.getEmail() : "Email");
+                    try {
+                        User user = dataSnapshot.getValue(User.class);
+                        if (user != null) {
+                            Log.d(TAG, "onDataChange: Setting user profile data.");
+                            profileName.setText(user.getUsername() != null ? user.getUsername() : "Username");
+                            profileEmail.setText(user.getEmail() != null ? user.getEmail() : "Email");
 
-                        Glide.with(ProfileFragment.this)
-                                .load(user.getProfileImageUrl())
-                                .circleCrop()
-                                .placeholder(R.drawable.ic_profile_placeholder)
-                                .into(profileImage);
-
+                            Glide.with(ProfileFragment.this)
+                                    .load(user.getProfileImageUrl())
+                                    .circleCrop()
+                                    .placeholder(R.drawable.ic_profile_placeholder)
+                                    .into(profileImage);
+                        } else {
+                            Log.w(TAG, "onDataChange: User data is null.");
+                            showToast("User data is incomplete.");
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "onDataChange: Failed to deserialize user data.", e);
+                        showToast("Failed to load user profile.");
                     }
                 } else {
                     Log.w(TAG, "onDataChange: User data not found.");
-                    showToast("User data not found");
+                    showToast("User data not found.");
                 }
             }
 
@@ -232,6 +241,7 @@ public class ProfileFragment extends Fragment {
             }
         });
     }
+
 
     private void loadPhotosCount(String userId) {
         DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
@@ -313,7 +323,6 @@ public class ProfileFragment extends Fragment {
             }
         });
     }
-
     private void showToast(String message) {
         Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
     }

@@ -1,34 +1,4 @@
-//package com.example.betre;
-//
-//import android.os.Bundle;
-//
-//import androidx.fragment.app.Fragment;
-//
-//import android.view.LayoutInflater;
-//import android.view.View;
-//import android.view.ViewGroup;
-//
-///**
-// * A simple {@link Fragment} subclass.
-// */
-//public class InboxAdminFragment extends Fragment {
-//
-//    public InboxAdminFragment() {
-//        // Required empty public constructor
-//    }
-//
-//    public static InboxAdminFragment newInstance() {
-//        return new InboxAdminFragment();
-//    }
-//
-//    @Override
-//    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//                             Bundle savedInstanceState){
-//        // Inflate an empty or default layout
-//        return inflater.inflate(R.layout.fragment_inbox_admin, container, false);
-//    }
-//}
-//
+
 
 package com.example.betre;
 
@@ -99,10 +69,13 @@ public class InboxAdminFragment extends Fragment {
         fetchReportedComments();
     }
 
+
+
     private void fetchReportedComments(){
         adminProgressBar.setVisibility(View.VISIBLE);
 
-        DatabaseReference reportsRef = FirebaseDatabase.getInstance().getReference("reportcomment");
+        // Corrected node name from "reportcomment" to "report_comments"
+        DatabaseReference reportsRef = FirebaseDatabase.getInstance().getReference("report_comments");
 
         // Listen for all reported comments
         reportsRef.addValueEventListener(new ValueEventListener(){
@@ -129,4 +102,5 @@ public class InboxAdminFragment extends Fragment {
             }
         });
     }
+
 }
