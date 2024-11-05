@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_dashboard_mod"
+        android:icon="@drawable/ic_dashboard"
+        android:title="Dashboard" />
+    <item
+        android:id="@+id/navigation_activity_mod"
+        android:icon="@drawable/ic_activity"
+        android:title="Activity" />
+
+    <item
+        android:id="@+id/navigation_flagged_mod"
+        android:icon="@drawable/ic_flagged"
+        android:title="Flagged" />
+
+    <item
+        android:id="@+id/navigation_inbox_mod"
+        android:icon="@drawable/ic_inbox"
+        android:title="Inbox" />
+
+    <item
+        android:id="@+id/navigation_profile_mod"
+        android:icon="@drawable/ic_profile"
+        android:title="Profile" />
+
+
+
+</menu>

@@ -63,7 +63,9 @@ public class SplashScreen extends AppCompatActivity {
 
                     if ("admin".equals(role)) {
                         navigateToAdmin();
-                    } else {
+                    } else if ("moderator".equals(role)) {
+                        navigateToModerator();
+                    }else{
                         navigateToMain();
                     }
                 } else {
@@ -94,6 +96,11 @@ public class SplashScreen extends AppCompatActivity {
 
     private void navigateToAdmin() {
         Intent intent = new Intent(SplashScreen.this, AdminActivity.class);
+        startActivity(intent);
+        finish();
+    }
+    private void navigateToModerator() {
+        Intent intent = new Intent(SplashScreen.this, ModeratorActivity.class);
         startActivity(intent);
         finish();
     }

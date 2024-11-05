@@ -1,9 +1,8 @@
 package com.example.betre.models;
 
-
-
 public class Report {
     private String reportId;
+
     private String postId;
     private String userId;
     private String reason;
@@ -11,17 +10,18 @@ public class Report {
     private String reportingUserId;
     private String reportedUsername;
     private String reportingUsername;
-
+    private String reporterId;
     private long timestamp;
 
-    public Report() {
+
+    public Report() {}
+
+    public Report(String reason, String reporterId, String reportedUserId) {
+        this.reason = reason;
+        this.reporterId = reporterId;
+        this.reportedUserId = reportedUserId;
     }
 
-    public Report(String postId, String userId, String reason) {
-        this.postId = postId;
-        this.userId = userId;
-        this.reason = reason;
-    }
 
     public Report(String reportedUserId, String reportingUserId, String reason, long timestamp) {
         this.reportedUserId = reportedUserId;
@@ -131,6 +131,14 @@ public class Report {
 
     public void setReportingUsername(String reportingUsername) {
         this.reportingUsername = reportingUsername;
+    }
+
+    public String getReporterId() {
+        return reporterId;
+    }
+
+    public void setReporterId(String reporterId) {
+        this.reporterId = reporterId;
     }
 
     // Optional: Override toString() for easier logging
