@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -360,6 +361,27 @@ public class SearchFragment extends Fragment {
         USERNAME, LOCATION
     }
 
+//    private void openUserProfileFragment(String username) {
+//        String userId = getUserIdFromUsername(username);
+//        if (userId != null) {
+//            UserProfileFragment userProfileFragment = UserProfileFragment.newInstance(userId);
+//            ((AppCompatActivity) getContext()).getSupportFragmentManager()
+//                    .beginTransaction()
+//                    .replace(R.id.home_content, userProfileFragment)
+//                    .addToBackStack(null)
+//                    .commit();
+//        }
+//    }
+//
+//    private String getUserIdFromUsername(String username) {
+//        for (Map.Entry<String, String> entry : userIdToUsernameMap.entrySet()) {
+//            if (entry.getValue().equalsIgnoreCase(username)) {
+//                return entry.getKey();
+//            }
+//        }
+//        return null;
+//    }
+
     private void openUserProfileFragment(String username) {
         String userId = getUserIdFromUsername(username);
         if (userId != null) {
@@ -369,6 +391,9 @@ public class SearchFragment extends Fragment {
                     .replace(R.id.home_content, userProfileFragment)
                     .addToBackStack(null)
                     .commit();
+        } else {
+            Log.e("SearchFragment", "openUserProfileFragment: User ID not found for username: " + username);
+            Toast.makeText(getContext(), "User not found.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -382,7 +407,7 @@ public class SearchFragment extends Fragment {
     }
 
     private void openDisplayPostFragment(String userId) {
-        DisplayPost displayPostFragment = DisplayPost.newInstance(userId, null);
+        DisplayPost displayPostFragment = DisplayPost.newInstance(userId);
         ((AppCompatActivity) getContext()).getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.home_content, displayPostFragment)

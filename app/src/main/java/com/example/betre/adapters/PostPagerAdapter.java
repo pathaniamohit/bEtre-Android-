@@ -1307,45 +1307,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
         });
     }
 
-//    private void openCommentPopup(String postId, PostViewHolder holder) {
-//        if (postId == null) {
-//            Log.e("PostPagerAdapter", "Cannot open comment popup: postId is null");
-//            return;
-//        }
-//
-//        // Inflate custom comment dialog layout
-//        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_comment, null);
-//        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-//        builder.setView(dialogView);
-//
-//        // Initialize views in the dialog
-//        RecyclerView commentRecyclerView = dialogView.findViewById(R.id.commentRecyclerView);
-//        EditText commentInput = dialogView.findViewById(R.id.commentInput);
-//        ImageView sendButton = dialogView.findViewById(R.id.sendButton);
-//
-//        // Setup RecyclerView for displaying comments
-//        List<Comment> commentList = new ArrayList<>();
-//        // **Important:** Pass the postId as the third parameter to CommentAdapter
-//        CommentAdapter commentAdapter = new CommentAdapter(context, commentList, postId);
-//        commentRecyclerView.setAdapter(commentAdapter);
-//        commentRecyclerView.setLayoutManager(new LinearLayoutManager(context));
-//
-//        // Fetch existing comments for the post
-//        loadComments(postId, commentAdapter, commentList);
-//
-//        // Show the dialog
-//        AlertDialog dialog = builder.create();
-//        dialog.show();
-//
-//        // Handle sending new comments
-//        sendButton.setOnClickListener(v -> {
-//            String commentText = commentInput.getText().toString().trim();
-//            if (!commentText.isEmpty()) {
-//                addCommentToFirebase(postId, commentText, holder);
-//                commentInput.setText("");
-//            }
-//        });
-//    }
+
 
     private void openCommentPopup(String postId, PostViewHolder holder) {
         if (postId == null) {

@@ -3,7 +3,6 @@ package com.example.betre;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 import android.view.LayoutInflater;
@@ -16,14 +15,12 @@ import com.example.betre.models.Post;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class DisplayPost extends Fragment {
@@ -45,10 +42,11 @@ public class DisplayPost extends Fragment {
 
     /**
      * Use this factory method to create a new instance of DisplayPost
+     *
      * @param userId The userId to filter posts by
      * @return A new instance of fragment DisplayPost
      */
-    public static DisplayPost newInstance(String userId, String param2) {
+    public static DisplayPost newInstance(String userId) {
         DisplayPost fragment = new DisplayPost();
         Bundle args = new Bundle();
         args.putString(ARG_USER_ID, userId); // Pass userId through arguments
