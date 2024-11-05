@@ -243,10 +243,7 @@ public class CreateFragment extends Fragment {
             return;
         }
 
-//        if (TextUtils.isEmpty(selectedLocation)) {
-//            Toast.makeText(getActivity(), "Please add a location", Toast.LENGTH_SHORT).show();
-//            return;
-//        }
+
 
         uploadImageAndCreatePost(content);
     }
