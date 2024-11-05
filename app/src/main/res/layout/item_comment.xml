@@ -6,10 +6,50 @@
     android:padding="8dp">
 
     <TextView
-        android:id="@+id/commentText"
+        android:id="@+id/comment_username"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textColor="@android:color/black" />
+        android:text="Username"
+        android:textStyle="bold"
+        android:textSize="14sp" />
 
+    <TextView
+        android:id="@+id/comment_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Comment content"
+        android:textSize="14sp"
+        android:paddingTop="2dp" />
+
+    <TextView
+        android:id="@+id/comment_timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="MM/dd/yyyy HH:mm"
+        android:textSize="12sp"
+        android:textColor="#888888"
+        android:paddingTop="2dp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="4dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/delete_comment_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delete"
+            style="@style/Widget.MaterialComponents.Button.TextButton" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/report_comment_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Report"
+            android:layout_marginStart="16dp"
+            style="@style/Widget.MaterialComponents.Button.TextButton" />
+    </LinearLayout>
 </LinearLayout>
+

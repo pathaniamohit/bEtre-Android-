@@ -1,5 +1,6 @@
 package com.example.betre.adapters;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,67 +8,82 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.betre.FlaggedAdminFragment;
 import com.example.betre.R;
 import com.example.betre.models.Report;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportViewHolder> {
-    private final Context context;
-    private final List<Report> reportList;
 
-    public ReportAdapter(Context context, List<Report> reportList) {
-        this.context = context;
+    private List<Report> reportList;
+    private Context context;
+    private FlaggedAdminFragment fragment;
+
+    public ReportAdapter(List<Report> reportList, Context context, FlaggedAdminFragment fragment){
         this.reportList = reportList;
+        this.context = context;
+        this.fragment = fragment;
     }
 
     @NonNull
     @Override
-    public ReportViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_report, parent, false);
+    public ReportViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType){
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_report, parent, false);
         return new ReportViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ReportViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ReportViewHolder holder, int position){
         Report report = reportList.get(position);
-        holder.reporterInfoTextView.setText(report.getReporterInfo());
-        holder.reasonTextView.setText(report.getReason());
-        holder.reportedUserIdTextView.setText(report.getReportedUserId());
+        holder.reportedUsername.setText("Reported User: " + report.getReportedUsername());
+        holder.reportingUsername.setText("Reporting User: " + report.getReportingUsername());
+        holder.reason.setText("Reason: " + report.getReason());
 
-        // Handle dismiss button click
-        holder.dismissButton.setOnClickListener(v -> dismissReport(report, position));
-    }
+        // Format timestamp to readable date
+        String formattedDate = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                .format(new Date(report.getTimestamp()));
+        holder.timestamp.setText("Reported On: " + formattedDate);
 
-    private void dismissReport(Report report, int position) {
-        DatabaseReference reportRef = FirebaseDatabase.getInstance().getReference("reports").child(report.getReportId());
-        reportRef.removeValue()
-                .addOnSuccessListener(aVoid -> {
-                    reportList.remove(position);
-                    notifyItemRemoved(position);
-                    Toast.makeText(context, "Report dismissed", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> Toast.makeText(context, "Failed to dismiss report", Toast.LENGTH_SHORT).show());
+        holder.removeReportButton.setOnClickListener(v -> {
+            // Confirm before removing
+            new AlertDialog.Builder(context)
+                    .setTitle("Remove Report")
+                    .setMessage("Are you sure you want to remove this report?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        fragment.removeReport(report.getReportId());
+                    })
+                    .setNegativeButton("No", null)
+                    .show();
+        });
     }
 
     @Override
-    public int getItemCount() {
+    public int getItemCount(){
         return reportList.size();
     }
 
-    public static class ReportViewHolder extends RecyclerView.ViewHolder {
-        TextView reporterInfoTextView, reasonTextView, reportedUserIdTextView;
-        Button dismissButton;
+    public static class ReportViewHolder extends RecyclerView.ViewHolder{
+        public TextView reportedUsername;
+        public TextView reportingUsername;
+        public TextView reason;
+        public TextView timestamp;
+        public Button removeReportButton;
 
-        public ReportViewHolder(@NonNull View itemView) {
+        public ReportViewHolder(View itemView){
             super(itemView);
-            reporterInfoTextView = itemView.findViewById(R.id.reporter_info);
-            reasonTextView = itemView.findViewById(R.id.report_reason);
-            reportedUserIdTextView = itemView.findViewById(R.id.reported_user_id);
-            dismissButton = itemView.findViewById(R.id.dismiss_button);
+            reportedUsername = itemView.findViewById(R.id.reported_username);
+            reportingUsername = itemView.findViewById(R.id.reporting_username);
+            reason = itemView.findViewById(R.id.report_reason);
+            timestamp = itemView.findViewById(R.id.report_timestamp);
+            removeReportButton = itemView.findViewById(R.id.remove_report_button);
         }
     }
 }
