@@ -39,6 +39,7 @@ public class ReportedCommentAdapter extends RecyclerView.Adapter<ReportedComment
     @Override
     public void onBindViewHolder(@NonNull ReportedCommentViewHolder holder, int position) {
         ReportedComment reportedComment = reportedCommentsList.get(position);
+        Log.d("ReportedCommentAdapter", "Binding ReportedComment: " + reportedComment.getReportId());
 
         holder.usernameTextView.setText(reportedComment.getUsername());
         holder.reasonTextView.setText("Reported for: " + reportedComment.getReportReason());
@@ -90,7 +91,7 @@ public class ReportedCommentAdapter extends RecyclerView.Adapter<ReportedComment
 
         commentRef.removeValue()
                 .addOnSuccessListener(aVoid -> {
-                    // Remove the report from 'reportcomment' node
+                    // Remove the report from 'report_comments' node
                     removeReport(reportedComment, false); // Pass false to avoid showing Toast again
                     Toast.makeText(context, "Comment deleted successfully.", Toast.LENGTH_SHORT).show();
                 })
@@ -114,7 +115,8 @@ public class ReportedCommentAdapter extends RecyclerView.Adapter<ReportedComment
             return;
         }
 
-        DatabaseReference reportRef = FirebaseDatabase.getInstance().getReference("reportcomment")
+        // Corrected node name from "reportcomment" to "report_comments"
+        DatabaseReference reportRef = FirebaseDatabase.getInstance().getReference("report_comments")
                 .child(reportId);
 
         reportRef.removeValue()
@@ -136,5 +138,5 @@ public class ReportedCommentAdapter extends RecyclerView.Adapter<ReportedComment
                     }
                 });
     }
-}
 
+}

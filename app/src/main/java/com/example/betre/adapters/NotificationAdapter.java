@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,11 +24,14 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
 
+
+
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.NotificationViewHolder> {
 
     private List<Notification> notificationList;
     private Context context;
     private DatabaseReference notificationRef;
+    private static final String TAG = "NotificationAdapter";
 
     public NotificationAdapter(List<Notification> notificationList, Context context) {
         this.notificationList = notificationList;
@@ -45,6 +49,12 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     @Override
     public void onBindViewHolder(@NonNull NotificationViewHolder holder, int position) {
         Notification notification = notificationList.get(position);
+
+        if (notification == null) {
+            Log.e(TAG, "onBindViewHolder: Notification is null at position " + position);
+            holder.notificationTextView.setText("Invalid notification");
+            return;
+        }
 
         // Display profile image if available
         Glide.with(context)
@@ -76,11 +86,24 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     private void displayNotification(NotificationViewHolder holder, Notification notification) {
         String username = notification.getUsername();
+        String content = notification.getContent();
+
+        // Handle null values
+        if (username == null) {
+            username = "Unknown User"; // Or any default string
+            Log.w(TAG, "displayNotification: Notification with null username detected. Notification ID: " + notification.getNotificationId());
+        }
+
+        if (content == null) {
+            content = ""; // Or any default handling
+            Log.w(TAG, "displayNotification: Notification with null content detected. Notification ID: " + notification.getNotificationId());
+        }
+
         Spannable spannable;
 
         switch (notification.getType()) {
             case "comment":
-                String commentText = username + " commented: " + notification.getContent();
+                String commentText = username + " commented: " + content;
                 spannable = createSpannable(commentText, username, Color.RED);
                 holder.notificationTextView.setText(spannable);
                 break;
@@ -100,19 +123,28 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 holder.notificationTextView.setText(spannable);
                 break;
             case "report":
-                String reportText = "Reported for: " + notification.getContent();
+                String reportText = "Reported for: " + content;
                 spannable = createSpannable(reportText, username, Color.RED);
                 holder.notificationTextView.setText(spannable);
                 break;
             default:
                 holder.notificationTextView.setText("Unknown notification type");
+                Log.w(TAG, "displayNotification: Unknown notification type: " + notification.getType());
         }
     }
 
     private Spannable createSpannable(String fullText, String username, int color) {
+        if (username == null) {
+            username = "Unknown User"; // Default value or handle accordingly
+        }
+
         Spannable spannable = new SpannableString(fullText);
         int usernameEnd = username.length();
-        spannable.setSpan(new ForegroundColorSpan(color), 0, usernameEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (usernameEnd > 0 && fullText.length() >= usernameEnd) {
+            spannable.setSpan(new ForegroundColorSpan(color), 0, usernameEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        } else {
+            Log.w(TAG, "createSpannable: Invalid username length or fullText length.");
+        }
         return spannable;
     }
 
