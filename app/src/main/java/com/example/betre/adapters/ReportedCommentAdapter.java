@@ -1,3 +1,5 @@
+
+
 package com.example.betre.adapters;
 
 import android.content.Context;
@@ -138,5 +140,3 @@ public class ReportedCommentAdapter extends RecyclerView.Adapter<ReportedComment
                     }
                 });
     }
-
-}

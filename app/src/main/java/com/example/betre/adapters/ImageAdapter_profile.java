@@ -164,6 +164,7 @@ public class ImageAdapter_profile extends RecyclerView.Adapter<ImageAdapter_prof
         // Reference to the following node for the current user
         DatabaseReference followingRef = FirebaseDatabase.getInstance().getReference("following")
                 .child(currentUserId).child(postOwnerId);
+
         holder.commentIcon.setOnClickListener(v -> {
             if (post.getPostId() != null) {
                 openCommentPopup(post.getPostId(), holder);
@@ -180,7 +181,7 @@ public class ImageAdapter_profile extends RecyclerView.Adapter<ImageAdapter_prof
 
     public static class ImageViewHolder extends RecyclerView.ViewHolder {
         ImageView userProfileImage, postImage, commentIcon, likeIcon, reportIcon;
-        //        Button followButton;
+
         LinearLayout userProfileLayout;
         TextView userName, userEmail, postDescription, likeCount, commentCount, postLocation;
 
