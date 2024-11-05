@@ -11,6 +11,7 @@ public class Report {
     private String reportedUsername;
     private String reportingUsername;
     private String reporterId;
+    private String reporterInfo;
     private long timestamp;
 
 
@@ -139,6 +140,14 @@ public class Report {
 
     public void setReporterId(String reporterId) {
         this.reporterId = reporterId;
+    }
+
+    public String getReporterInfo() {
+        return reporterInfo;
+    }
+
+    public void setReporterInfo(String reporterInfo) {
+        this.reporterInfo = reporterInfo;
     }
 
     // Optional: Override toString() for easier logging

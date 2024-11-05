@@ -33,6 +33,9 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportView
         this.fragment = fragment;
     }
 
+    public ReportAdapter(Context context, List<Report> reportList) {
+    }
+
     @NonNull
     @Override
     public ReportViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType){
