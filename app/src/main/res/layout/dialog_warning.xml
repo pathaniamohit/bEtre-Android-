@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Dialog Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send Warning"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center_horizontal"
+        android:textColor="@color/black" />
+
+    <!-- Warning Message Input Field -->
+    <EditText
+        android:id="@+id/warningMessageInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter warning message"
+        android:layout_marginTop="12dp"
+        android:padding="8dp"
+        android:background="@drawable/rounded_edit_text_background"
+        android:inputType="textMultiLine"
+        android:minHeight="100dp"
+        android:gravity="top|start" />
+
+    <!-- Dialog Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/buttonCancelWarning"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:textColor="@color/red"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <Button
+            android:id="@+id/buttonSendWarning"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_marginStart="16dp"
+            android:enabled="false"
+            android:textColor="@color/black" />
+    </LinearLayout>
+</LinearLayout>
