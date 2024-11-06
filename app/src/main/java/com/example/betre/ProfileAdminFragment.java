@@ -1,5 +1,6 @@
 package com.example.betre;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -62,12 +63,39 @@ public class ProfileAdminFragment extends Fragment {
         }
 
         logoutButton.setOnClickListener(v -> {
-            auth.signOut();
-            startActivity(new Intent(getActivity(), LoginActivity.class));
-            getActivity().finish();
+            new AlertDialog.Builder(getActivity())
+                    .setTitle("Logout")
+                    .setMessage("Are you sure you want to logout?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        FirebaseUser currentUser = auth.getCurrentUser();
+                        if (currentUser != null) {
+                            setIsOnlineStatus(currentUser.getUid(), false, this::signOutUser);
+                        }
+                    })
+                    .setNegativeButton("No", null)
+                    .show();
         });
 
         return view;
+    }
+
+    private void setIsOnlineStatus(String uid, boolean isOnline, Runnable onComplete) {
+        databaseRef.child("users").child(uid).child("isOnline").setValue(isOnline)
+                .addOnSuccessListener(aVoid -> onComplete.run())
+                .addOnFailureListener(e -> {
+                    onComplete.run();
+                    // Optionally, handle failure to update isOnline status here
+                });
+    }
+
+    private void signOutUser() {
+        auth.signOut();
+        Intent intent = new Intent(getActivity(), LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        if (getActivity() != null) {
+            getActivity().finish();
+        }
     }
 
     private void loadUserProfile(String userId) {
