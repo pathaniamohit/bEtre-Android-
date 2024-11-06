@@ -97,33 +97,14 @@ public class ExploreFragment extends Fragment {
                     }
                 }
 
-                // Now, fetch posts from users that the current user is following
-                postsListener = new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        postList.clear();
-
-                        for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-                            Post post = postSnapshot.getValue(Post.class);
-
-                            if (post != null && followingUserIds.contains(post.getUserId())) {
-                                post.setPostId(postSnapshot.getKey());
-                                postList.add(post);
-                            }
-                        }
-                        Collections.shuffle(postList);
-                        postPagerAdapter.notifyDataSetChanged();
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        if (isAdded() && getContext() != null) {
-                            Toast.makeText(getContext(), "Error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                };
-
-                postsReference.addListenerForSingleValueEvent(postsListener);
+                // Check if the user follows any others
+                if (followingUserIds.isEmpty()) {
+                    // Display all posts if not following anyone, except the user's own posts
+                    loadAllPostsExceptCurrentUser(currentUserId);
+                } else {
+                    // Display posts only from followed users
+                    loadPostsFromFollowedUsers(followingUserIds);
+                }
             }
 
             @Override
@@ -133,6 +114,66 @@ public class ExploreFragment extends Fragment {
                 }
             }
         });
+    }
+
+    private void loadAllPostsExceptCurrentUser(String currentUserId) {
+        postsListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                postList.clear();
+
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                    Post post = postSnapshot.getValue(Post.class);
+
+                    // Check if the post exists and is not from the current user
+                    if (post != null && !post.getUserId().equals(currentUserId)) {
+                        post.setPostId(postSnapshot.getKey());
+                        postList.add(post);
+                    }
+                }
+                Collections.shuffle(postList);
+                postPagerAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                if (isAdded() && getContext() != null) {
+                    Toast.makeText(getContext(), "Error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+
+        postsReference.addListenerForSingleValueEvent(postsListener);
+    }
+
+    private void loadPostsFromFollowedUsers(List<String> followingUserIds) {
+        postsListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                postList.clear();
+
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                    Post post = postSnapshot.getValue(Post.class);
+
+                    // Check if the post exists and is from a followed user
+                    if (post != null && followingUserIds.contains(post.getUserId())) {
+                        post.setPostId(postSnapshot.getKey());
+                        postList.add(post);
+                    }
+                }
+                Collections.shuffle(postList);
+                postPagerAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                if (isAdded() && getContext() != null) {
+                    Toast.makeText(getContext(), "Error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+
+        postsReference.addListenerForSingleValueEvent(postsListener);
     }
 
     private void detachListener() {

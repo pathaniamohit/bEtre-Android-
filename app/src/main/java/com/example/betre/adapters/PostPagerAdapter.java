@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -28,6 +29,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
 
     private Context context;
     private List<Post> postList;
+    String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
     public PostPagerAdapter(Context context, List<Post> postList) {
         this.context = context;
@@ -86,9 +88,28 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             }
         });
 
+        // Check follow status and update the button text
+        DatabaseReference followingRef = FirebaseDatabase.getInstance().getReference("following")
+                .child(currentUserId).child(postOwnerId);
+        followingRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists() && Boolean.TRUE.equals(snapshot.getValue(Boolean.class))) {
+                    holder.followButton.setText("Unfollow");
+                } else {
+                    holder.followButton.setText("Follow");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("PostPagerAdapter", "Error checking follow status: " + error.getMessage());
+            }
+        });
+
         // Report functionality
         holder.reportIcon.setOnClickListener(v -> openReportDialog(post.getPostId()));
-
+        holder.followButton.setOnClickListener(v -> toggleFollow(postOwnerId, holder));
         // Display post details
         holder.postDescription.setText(post.getContent());
         holder.likeCount.setText(String.valueOf(post.getCount_like()));
@@ -103,6 +124,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
     public static class PostViewHolder extends RecyclerView.ViewHolder {
         ImageView userProfileImage, postImage, likeIcon, commentIcon, reportIcon;
         TextView userName, postDescription, likeCount, commentCount;
+        Button followButton;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -115,7 +137,39 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             postDescription = itemView.findViewById(R.id.post_description);
             likeCount = itemView.findViewById(R.id.like_count);
             commentCount = itemView.findViewById(R.id.comment_count);
+            followButton = itemView.findViewById(R.id.follow_button); // Assume this button is in the layout
         }
+    }
+
+    private void toggleFollow(String postOwnerId, PostViewHolder holder) {
+        DatabaseReference followingRef = FirebaseDatabase.getInstance().getReference("following")
+                .child(currentUserId).child(postOwnerId);
+        DatabaseReference followersRef = FirebaseDatabase.getInstance().getReference("followers")
+                .child(postOwnerId).child(currentUserId);
+
+        followingRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists() && Boolean.TRUE.equals(snapshot.getValue(Boolean.class))) {
+                    // Unfollow
+                    followingRef.setValue(false);
+                    followersRef.setValue(false);
+                    holder.followButton.setText("Follow");
+                    Toast.makeText(context, "Unfollowed", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Follow
+                    followingRef.setValue(true);
+                    followersRef.setValue(true);
+                    holder.followButton.setText("Unfollow");
+                    Toast.makeText(context, "Followed", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("PostPagerAdapter", "Error toggling follow: " + error.getMessage());
+            }
+        });
     }
 
     private void toggleLike(String postId, String postOwnerId, PostViewHolder holder, String currentUserId) {

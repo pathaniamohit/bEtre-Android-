@@ -319,7 +319,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     }
 
     private void reportComment(Comment comment, String reason) {
-        DatabaseReference reportRef = FirebaseDatabase.getInstance().getReference("reportcomment");
+        DatabaseReference reportRef = FirebaseDatabase.getInstance().getReference("report_comments");
         String reportId = reportRef.push().getKey();
 
         if (reportId == null) {
