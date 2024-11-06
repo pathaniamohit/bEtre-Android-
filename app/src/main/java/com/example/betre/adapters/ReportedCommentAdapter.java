@@ -140,3 +140,4 @@ public class ReportedCommentAdapter extends RecyclerView.Adapter<ReportedComment
                     }
                 });
     }
+}
