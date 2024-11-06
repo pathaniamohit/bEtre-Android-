@@ -39,7 +39,7 @@ public class LoginActivity extends AppCompatActivity {
     private MaterialButton loginButton;
     private TextView forgotPassword, signUpLink;
     private FirebaseAuth mAuth;
-    private DatabaseReference UsersDB;
+    private DatabaseReference UsersDB, dbRef;
     private ImageView showPasswordButton;
     private boolean isPasswordVisible = false;
 
@@ -62,6 +62,7 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         UsersDB = FirebaseDatabase.getInstance().getReference("users");
+        dbRef = FirebaseDatabase.getInstance().getReference();
 
         signUpLink.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, SignupPage.class)));
 
@@ -106,6 +107,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     if (mAuth.getCurrentUser() != null) {
+                        setIsOnlineStatus(mAuth.getCurrentUser().getUid(), true);
                         checkUserRole(mAuth.getCurrentUser().getUid());
                     }
                 } else {
@@ -113,6 +115,12 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         }).addOnFailureListener(e -> Toast.makeText(LoginActivity.this, "Login failed!", Toast.LENGTH_SHORT).show());
+    }
+
+    private void setIsOnlineStatus(String uid, boolean isOnline) {
+        dbRef.child("users").child(uid).child("isOnline").setValue(isOnline)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "isOnline status updated successfully."))
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to update isOnline status: ", e));
     }
 
 //    private void checkUserRole(String userId) {
@@ -177,7 +185,7 @@ public class LoginActivity extends AppCompatActivity {
         } else if (role.equals("user")) {
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
         } else if (role.equals("moderator")) {
-            startActivity(new Intent(LoginActivity.this, ModeratorActivity.class));
+            startActivity(new Intent(LoginActivity.this, AdminActivity.class));
         } else {
             Toast.makeText(LoginActivity.this, "Unknown role.", Toast.LENGTH_SHORT).show();
         }

@@ -12,9 +12,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.example.betre.Edit_Post_Fragment;
 import com.example.betre.R;
 import com.example.betre.models.Comment;
 import com.example.betre.models.Post;
@@ -29,11 +31,17 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
 
     private Context context;
     private List<Post> postList;
+    private boolean isProfileView;
     String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-    public PostPagerAdapter(Context context, List<Post> postList) {
+    // Constants for click detection
+    private static final long DOUBLE_CLICK_TIME_DELTA = 300; // Time interval for detecting double-click
+    private static final long TRIPLE_CLICK_TIME_DELTA = 500; // Time interval for detecting triple-click
+
+    public PostPagerAdapter(Context context, List<Post> postList, boolean isProfileView) {
         this.context = context;
         this.postList = postList;
+        this.isProfileView = isProfileView; // Set the flag
     }
 
     @NonNull
@@ -109,7 +117,60 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
 
         // Report functionality
         holder.reportIcon.setOnClickListener(v -> openReportDialog(post.getPostId()));
-        holder.followButton.setOnClickListener(v -> toggleFollow(postOwnerId, holder));
+
+
+        if (!isProfileView) {
+            holder.followButton.setVisibility(View.VISIBLE); // Show follow button
+            followingRef = FirebaseDatabase.getInstance().getReference("following")
+                    .child(currentUserId).child(postOwnerId);
+            followingRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists() && Boolean.TRUE.equals(snapshot.getValue(Boolean.class))) {
+                        holder.followButton.setText("Unfollow");
+                    } else {
+                        holder.followButton.setText("Follow");
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("PostPagerAdapter", "Error checking follow status: " + error.getMessage());
+                }
+            });
+
+            holder.followButton.setOnClickListener(v -> toggleFollow(postOwnerId, holder));
+        } else {
+            holder.followButton.setVisibility(View.GONE); // Hide follow button in profile view
+        }
+
+        // Double-click and triple-click logic for delete and edit actions
+        if (isProfileView) {
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                private long lastClickTime = 0;
+                private int clickCount = 0;
+
+                @Override
+                public void onClick(View v) {
+                    long clickTime = System.currentTimeMillis();
+                    if (clickTime - lastClickTime < TRIPLE_CLICK_TIME_DELTA) {
+                        clickCount++;
+                    } else {
+                        clickCount = 1;
+                    }
+
+                    if (clickCount == 2 && clickTime - lastClickTime < DOUBLE_CLICK_TIME_DELTA) {
+                        showDeleteDialog(post); // Show delete dialog on double-click
+                    } else if (clickCount == 3) {
+                        openEditPostFragment(post.getPostId()); // Open edit post fragment on triple-click
+                    }
+
+                    lastClickTime = clickTime;
+                }
+            });
+        }
+
+
         // Display post details
         holder.postDescription.setText(post.getContent());
         holder.likeCount.setText(String.valueOf(post.getCount_like()));
@@ -170,6 +231,56 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
                 Log.e("PostPagerAdapter", "Error toggling follow: " + error.getMessage());
             }
         });
+    }
+
+    // Function to open Edit Post Fragment
+    private void openEditPostFragment(String postId) {
+        if (postId != null && !postId.isEmpty()) {
+            Edit_Post_Fragment editPostFragment = Edit_Post_Fragment.newInstance(postId);
+            ((AppCompatActivity) context).getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.home_content, editPostFragment)
+                    .addToBackStack(null)
+                    .commit();
+        } else {
+            Log.e("PostPagerAdapter", "postId is null or empty when opening Edit_Post_Fragment");
+        }
+    }
+
+    // Function to show delete dialog
+    private void showDeleteDialog(Post post) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Post Options")
+                .setItems(new String[]{"Delete"}, (dialog, which) -> {
+                    if (which == 0) {
+                        showDeleteConfirmationDialog(post);
+                    }
+                })
+                .show();
+    }
+
+    // Show delete confirmation dialog
+    private void showDeleteConfirmationDialog(Post post) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Delete Post")
+                .setMessage("Are you sure you want to delete this post?")
+                .setPositiveButton("Yes", (dialog, which) -> deletePost(post))
+                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    // Function to delete post
+    private void deletePost(Post post) {
+        DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
+        postsRef.child(post.getPostId()).removeValue()
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(context, "Post deleted successfully", Toast.LENGTH_SHORT).show();
+                    postList.remove(post);
+                    notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(context, "Failed to delete post: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void toggleLike(String postId, String postOwnerId, PostViewHolder holder, String currentUserId) {

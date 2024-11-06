@@ -78,7 +78,7 @@ public class DisplayPost extends Fragment {
 
         viewPager = view.findViewById(R.id.view_pager);
         postList = new ArrayList<>();
-        postPagerAdapter = new PostPagerAdapter(getContext(), postList);
+        postPagerAdapter = new PostPagerAdapter(getContext(), postList, false);
         viewPager.setAdapter(postPagerAdapter);
 
         return view;

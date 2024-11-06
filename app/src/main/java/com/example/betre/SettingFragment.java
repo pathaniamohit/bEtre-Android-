@@ -122,22 +122,13 @@ public class SettingFragment extends Fragment {
         });
 
         logout_layout.setOnClickListener(v -> {
-            // Create an AlertDialog to confirm logout
             new AlertDialog.Builder(getActivity())
                     .setTitle("Logout")
                     .setMessage("Are you sure you want to logout?")
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            mAuth.signOut();
-
-                            Intent intent = new Intent(getActivity(), LoginActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-
-                            if (getActivity() != null) {
-                                getActivity().finish();
-                            }
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        FirebaseUser currentUser = mAuth.getCurrentUser();
+                        if (currentUser != null) {
+                            setIsOnlineStatus(currentUser.getUid(), false, this::signOutUser);
                         }
                     })
                     .setNegativeButton("No", null)
@@ -146,5 +137,25 @@ public class SettingFragment extends Fragment {
 
         return view;
     }
+
+    private void setIsOnlineStatus(String uid, boolean isOnline, Runnable onComplete) {
+        mDatabase.child("users").child(uid).child("isOnline").setValue(isOnline)
+                .addOnSuccessListener(aVoid -> onComplete.run())
+                .addOnFailureListener(e -> {
+                    onComplete.run();
+                    // Optionally, handle failure to update isOnline status here
+                });
+    }
+
+    private void signOutUser() {
+        mAuth.signOut();
+        Intent intent = new Intent(getActivity(), LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        if (getActivity() != null) {
+            getActivity().finish();
+        }
+    }
+
 
 }

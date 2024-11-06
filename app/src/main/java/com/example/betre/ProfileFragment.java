@@ -21,7 +21,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.betre.adapters.ImageAdapter_profile;
+import com.example.betre.adapters.PostPagerAdapter;
 import com.example.betre.models.Post;
 import com.example.betre.models.User;
 import com.google.firebase.appcheck.FirebaseAppCheck;
@@ -54,7 +54,7 @@ public class ProfileFragment extends Fragment {
     private StorageReference mStorageRef;
     private DatabaseReference mDatabase;
     private RecyclerView postsRecyclerView;
-    private ImageAdapter_profile postAdapter;
+    private PostPagerAdapter postAdapter;
     private List<Post> postList;
     private ImageView settingsButton;
 
@@ -81,7 +81,7 @@ public class ProfileFragment extends Fragment {
 
         postsRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 1));
         postList = new ArrayList<>();
-        postAdapter = new ImageAdapter_profile(getContext(), postList, true);
+        postAdapter = new PostPagerAdapter(getContext(), postList, true);
         postsRecyclerView.setAdapter(postAdapter);
 
         Log.d(TAG, "onViewCreated: Initializing Firebase components.");

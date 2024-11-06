@@ -49,8 +49,15 @@ public class SplashScreen extends AppCompatActivity {
             navigateToLogin();
         } else {
             Log.d(TAG, "User logged in, checking role.");
+            setIsOnlineStatus(currentUser.getUid(), true);  // Set isOnline to true
             checkUserRole(currentUser.getUid());
         }
+    }
+
+    private void setIsOnlineStatus(String uid, boolean isOnline) {
+        dbRef.child("users").child(uid).child("isOnline").setValue(isOnline)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "isOnline status updated successfully."))
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to update isOnline status: ", e));
     }
 
     private void checkUserRole(String uid) {
@@ -64,7 +71,7 @@ public class SplashScreen extends AppCompatActivity {
                     if ("admin".equals(role)) {
                         navigateToAdmin();
                     } else if ("moderator".equals(role)) {
-                        navigateToModerator();
+                        navigateToAdmin();
                     }else{
                         navigateToMain();
                     }
