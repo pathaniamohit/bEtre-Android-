@@ -173,8 +173,8 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
 
         // Display post details
         holder.postDescription.setText(post.getContent());
-        holder.likeCount.setText(String.valueOf(post.getCount_like()));
-        holder.commentCount.setText(String.valueOf(post.getCount_comment()));
+        holder.likeCount.setText("");
+        holder.commentCount.setText("");
     }
 
     @Override
