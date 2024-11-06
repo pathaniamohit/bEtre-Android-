@@ -13,6 +13,38 @@ public class Notification {
     // Default constructor
     public Notification() {}
 
+    // Constructor for warning notifications
+    public Notification(String notificationId, String type, String userId, long timestamp, String username, String content) {
+        this.notificationId = notificationId;
+        this.type = type;
+        this.userId = userId;
+        this.timestamp = timestamp;
+        this.username = username;
+        this.content = content;
+    }
+
+    // Constructor for comment notifications
+    public Notification(String notificationId, String type, String userId, String postId, long timestamp, String username, String content) {
+        this.notificationId = notificationId;
+        this.type = type;
+        this.userId = userId;
+        this.postId = postId;
+        this.timestamp = timestamp;
+        this.username = username;
+        this.content = content;
+    }
+
+    // Overloaded constructor for simpler notification creation
+    public Notification(String userId, String type, String username, String content, long timestamp, String notificationId) {
+        this.userId = userId;
+        this.type = type;
+        this.username = username;
+        this.content = content;
+        this.timestamp = timestamp;
+        this.notificationId = notificationId;
+    }
+
+
     // Constructor
     public Notification(String userId, String postId, String type, String username, String content, long timestamp, String notificationId, String profileImageUrl) {
         this.userId = userId;
@@ -41,6 +73,25 @@ public class Notification {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public String getDescription() {
+        switch (type) {
+            case "comment":
+                return username + " commented: " + (content != null ? content : "");
+            case "like":
+                return username + " liked your post.";
+            case "follow":
+                return username + " started following you.";
+            case "unfollow":
+                return username + " unfollowed you.";
+            case "report":
+                return "Reported for: " + (content != null ? content : "No reason specified");
+            case "warning":
+                return "Admin warned you: " + (content != null ? content : "No reason provided");
+            default:
+                return "Unknown notification type";
+        }
     }
 
     // Getter and Setter for postId
