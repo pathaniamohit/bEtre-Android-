@@ -6,6 +6,17 @@
     android:padding="16dp">
 
     <!-- Progress Bar -->
+    <TextView
+        android:id="@+id/admin_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="50dp"
+        android:text="Reported Comments"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
     <ProgressBar
         android:id="@+id/admin_progress_bar"
         android:layout_width="wrap_content"

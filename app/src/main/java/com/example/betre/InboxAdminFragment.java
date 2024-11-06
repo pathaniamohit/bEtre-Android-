@@ -165,35 +165,55 @@ public class InboxAdminFragment extends Fragment {
 
         private void giveWarning(String commentOwnerId, String message) {
             DatabaseReference warningRef = FirebaseDatabase.getInstance().getReference("warnings").child(commentOwnerId).push();
-            warningRef.setValue(new HashMap<String, Object>() {{
-                        put("userId", commentOwnerId);
-                        put("reason", message);
-                        put("timestamp", System.currentTimeMillis());
-                    }})
-                    .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Warning issued.", Toast.LENGTH_SHORT).show())
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to issue warning.", Toast.LENGTH_SHORT).show());
+            HashMap<String, Object> warningData = new HashMap<>();
+            warningData.put("userId", commentOwnerId);
+            warningData.put("reason", message);
+            warningData.put("timestamp", System.currentTimeMillis());
+
+            warningRef.setValue(warningData)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getContext(), "Warning issued.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "Failed to issue warning.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
         }
 
         private void markCommentAsReviewed(String reportId, int position) {
             reportsRef.child(reportId).removeValue()
-                    .addOnSuccessListener(aVoid -> {
-                        reportedCommentsList.remove(position);
-                        notifyItemRemoved(position);
-                        Toast.makeText(getContext(), "Report marked as reviewed.", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to mark as reviewed.", Toast.LENGTH_SHORT).show());
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            if (position >= 0 && position < reportedCommentsList.size()) { // Check index validity
+                                reportedCommentsList.remove(position);
+                                notifyItemRemoved(position);
+                                Toast.makeText(getContext(), "Report marked as reviewed.", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "Invalid index.", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(getContext(), "Failed to mark as reviewed.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
         }
 
         private void deleteComment(String postId, String commentId, int position) {
             DatabaseReference commentRef = FirebaseDatabase.getInstance().getReference("comments").child(postId).child(commentId);
             commentRef.removeValue()
-                    .addOnSuccessListener(aVoid -> {
-                        reportsRef.child(commentId).removeValue();
-                        reportedCommentsList.remove(position);
-                        notifyItemRemoved(position);
-                        Toast.makeText(getContext(), "Comment deleted.", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to delete comment.", Toast.LENGTH_SHORT).show());
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            reportsRef.child(commentId).removeValue();
+                            if (position >= 0 && position < reportedCommentsList.size()) { // Check index validity
+                                reportedCommentsList.remove(position);
+                                notifyItemRemoved(position);
+                                Toast.makeText(getContext(), "Comment deleted.", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "Invalid index.", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(getContext(), "Failed to delete comment.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
         }
 
         public class ReportedCommentViewHolder extends RecyclerView.ViewHolder {
