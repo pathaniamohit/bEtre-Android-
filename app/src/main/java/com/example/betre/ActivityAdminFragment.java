@@ -5,11 +5,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.SearchView;
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
+import androidx.appcompat.widget.SearchView; // Use androidx.appcompat.widget.SearchView
 
 import com.example.betre.adapters.PostPagerAdapter;
 import com.example.betre.models.Post;
@@ -24,26 +23,26 @@ import java.util.List;
 
 public class ActivityAdminFragment extends Fragment {
 
-    private ViewPager2 viewPager;  // Change to ViewPager2
+    private ViewPager2 viewPager;
     private PostPagerAdapter adapter;
     private List<Post> postList;
     private List<Post> filteredPostList; // For search functionality
     private DatabaseReference postsRef;
-    private SearchView searchView;
+    private SearchView searchView; // Updated import to androidx.appcompat.widget.SearchView
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_activity_admin, container, false);
 
-        viewPager = view.findViewById(R.id.reported_posts_recycler_view); // Reference ViewPager2
+        viewPager = view.findViewById(R.id.reported_posts_recycler_view);
         postList = new ArrayList<>();
         filteredPostList = new ArrayList<>();
 
         // Initialize PostPagerAdapter with isProfile set to false for admin view
-        adapter = new PostPagerAdapter(getContext(), filteredPostList, true);
-        viewPager.setAdapter(adapter);  // Set adapter to ViewPager2
+        adapter = new PostPagerAdapter(getContext(), filteredPostList, false);
+        viewPager.setAdapter(adapter);
 
-        searchView = view.findViewById(R.id.admin_search_view);
+        searchView = view.findViewById(R.id.searchView);
 
         // Reference the "posts" node directly
         postsRef = FirebaseDatabase.getInstance().getReference("posts");
@@ -84,47 +83,29 @@ public class ActivityAdminFragment extends Fragment {
 
             @Override
             public boolean onQueryTextSubmit(String query) {
-                filterPosts(query);
+                filterPostsByLocation(query);
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                filterPosts(newText);
+                filterPostsByLocation(newText); // Filter as you type
                 return true;
             }
         });
     }
 
-    private void filterPosts(String query) {
+    private void filterPostsByLocation(String query) {
         filteredPostList.clear();
         if (query.isEmpty()) {
             filteredPostList.addAll(postList);
         } else {
             String lowerCaseQuery = query.toLowerCase();
             for (Post post : postList) {
-                boolean matchesContent = post.getContent() != null && post.getContent().toLowerCase().contains(lowerCaseQuery);
                 boolean matchesLocation = post.getLocation() != null && post.getLocation().toLowerCase().contains(lowerCaseQuery);
-
-                // Fetch and match username of the post owner
-                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(post.getUserId());
-                userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String username = dataSnapshot.child("username").getValue(String.class);
-                        boolean matchesUsername = username != null && username.toLowerCase().contains(lowerCaseQuery);
-
-                        if (matchesContent || matchesLocation || matchesUsername) {
-                            filteredPostList.add(post);
-                            adapter.notifyDataSetChanged();
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Log.e("ActivityAdminFragment", "Error fetching username: " + databaseError.getMessage());
-                    }
-                });
+                if (matchesLocation) {
+                    filteredPostList.add(post);
+                }
             }
         }
         adapter.notifyDataSetChanged();

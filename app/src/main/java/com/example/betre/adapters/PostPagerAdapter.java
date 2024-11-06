@@ -84,6 +84,14 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
         // Set up post image
         Glide.with(context).load(post.getImageUrl()).placeholder(R.drawable.sign1).into(holder.postImage);
 
+        // Display location if available
+        if (post.getLocation() != null && !post.getLocation().isEmpty()) {
+            holder.postLocation.setText(post.getLocation());
+            holder.postLocation.setVisibility(View.VISIBLE);
+        } else {
+            holder.postLocation.setVisibility(View.GONE); // Hide if no location
+        }
+
         // Like functionality
         holder.likeIcon.setOnClickListener(v -> toggleLike(post.getPostId(), postOwnerId, holder, currentUserId));
 
@@ -184,7 +192,7 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
 
     public static class PostViewHolder extends RecyclerView.ViewHolder {
         ImageView userProfileImage, postImage, likeIcon, commentIcon, reportIcon;
-        TextView userName, postDescription, likeCount, commentCount;
+        TextView userName, postDescription, likeCount, commentCount, postLocation;
         Button followButton;
 
         public PostViewHolder(@NonNull View itemView) {
@@ -198,7 +206,8 @@ public class PostPagerAdapter extends RecyclerView.Adapter<PostPagerAdapter.Post
             postDescription = itemView.findViewById(R.id.post_description);
             likeCount = itemView.findViewById(R.id.like_count);
             commentCount = itemView.findViewById(R.id.comment_count);
-            followButton = itemView.findViewById(R.id.follow_button); // Assume this button is in the layout
+            followButton = itemView.findViewById(R.id.follow_button);
+            postLocation = itemView.findViewById(R.id.post_location);// Assume this button is in the layout
         }
     }
 
