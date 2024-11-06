@@ -70,12 +70,12 @@ public class ReportedCommentAdapter extends RecyclerView.Adapter<ReportedComment
 
         public ReportedCommentViewHolder(@NonNull View itemView) {
             super(itemView);
-            usernameTextView = itemView.findViewById(R.id.reported_comment_username);
-            reasonTextView = itemView.findViewById(R.id.reported_comment_reason);
-            contentTextView = itemView.findViewById(R.id.reported_comment_content);
-            timestampTextView = itemView.findViewById(R.id.reported_comment_timestamp);
-            deleteButton = itemView.findViewById(R.id.delete_comment_button);
-            removeReportButton = itemView.findViewById(R.id.remove_report_button);
+//            usernameTextView = itemView.findViewById(R.id.reported_comment_username);
+//            reasonTextView = itemView.findViewById(R.id.reported_comment_reason);
+//            contentTextView = itemView.findViewById(R.id.reported_comment_content);
+//            timestampTextView = itemView.findViewById(R.id.reported_comment_timestamp);
+//            deleteButton = itemView.findViewById(R.id.delete_comment_button);
+//            removeReportButton = itemView.findViewById(R.id.remove_report_button);
         }
     }
 

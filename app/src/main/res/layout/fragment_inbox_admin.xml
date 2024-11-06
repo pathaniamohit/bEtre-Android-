@@ -1,42 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<!--<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    android:id="@+id/inbox_admin_fragment"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="match_parent">-->
-
-<!--    <androidx.recyclerview.widget.RecyclerView-->
-<!--        android:id="@+id/reported_comments_recycler_view"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent" />-->
-
-<!--</FrameLayout>-->
-
-<!-- res/layout/fragment_inbox_admin.xml -->
-
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/inbox_admin_fragment"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".InboxAdminFragment">
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <!-- ProgressBar to indicate loading -->
+    <!-- Progress Bar -->
     <ProgressBar
         android:id="@+id/admin_progress_bar"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_centerInParent="true"
-        android:visibility="gone"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
 
-    <!-- RecyclerView to display reported comments -->
+    <!-- RecyclerView for reported comments -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/reported_comments_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp"
         android:layout_marginTop="8dp" />
-
-</RelativeLayout>
-
+</LinearLayout>

@@ -1,71 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/reported_comment_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="12dp"
-    android:layout_marginBottom="8dp">
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
 
-    <!-- Username and Report Reason -->
+    <!-- Comment Owner -->
     <TextView
-        android:id="@+id/reported_comment_username"
+        android:id="@+id/comment_owner_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Username"
+        android:text="Comment Owner: "
         android:textStyle="bold"
+        android:textColor="@color/blue"
         android:textSize="16sp" />
 
+    <!-- Reported By -->
     <TextView
-        android:id="@+id/reported_comment_reason"
+        android:id="@+id/reported_by_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Reported for: Reason"
-        android:textColor="#FF0000"
+        android:text="Reported By: "
+        android:textColor="@color/black"
+        android:textSize="14sp"
         android:layout_marginTop="4dp" />
 
-    <!-- Comment Content -->
+    <!-- Content of the Comment -->
     <TextView
-        android:id="@+id/reported_comment_content"
-        android:layout_width="wrap_content"
+        android:id="@+id/comment_content_text"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Comment content goes here..."
-        android:layout_marginTop="8dp" />
+        android:text="Content: "
+        android:textSize="14sp"
+        android:textColor="@color/black"
+        android:layout_marginTop="4dp"
+        android:paddingStart="8dp" />
 
-    <!-- Timestamp -->
+    <!-- Reason for Report -->
     <TextView
-        android:id="@+id/reported_comment_timestamp"
-        android:layout_width="wrap_content"
+        android:id="@+id/report_reason_text"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="MM/dd/yyyy HH:mm"
+        android:text="Reason: "
         android:textSize="12sp"
-        android:textColor="#808080"
-        android:layout_marginTop="4dp" />
-
-    <!-- Action Buttons: Delete and Remove Report -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="12dp">
-
-        <Button
-            android:id="@+id/delete_comment_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Delete"
-            android:background="@color/design_default_color_error"
-            android:textColor="@android:color/white"
-            android:layout_marginEnd="16dp" />
-
-        <Button
-            android:id="@+id/remove_report_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Remove Report"
-            android:background="@color/design_default_color_primary"
-            android:textColor="@android:color/white" />
-
-    </LinearLayout>
-
+        android:textColor="@color/red"
+        android:layout_marginTop="4dp"
+        android:paddingTop="4dp" />
 </LinearLayout>

@@ -16,6 +16,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.betre.R;
 import com.example.betre.models.User;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.functions.HttpsCallableResult;
 import com.google.firebase.database.DatabaseReference;
@@ -54,6 +57,24 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         // Bind user data
         holder.username.setText(user.getUsername());
         holder.email.setText(user.getEmail());
+
+        // Check if user is online and set text color
+        usersDB.child(user.getUserId()).child("isOnline").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Boolean isOnline = snapshot.getValue(Boolean.class);
+                if (Boolean.TRUE.equals(isOnline)) {
+                    holder.username.setTextColor(context.getResources().getColor(R.color.green));
+                } else {
+                    holder.username.setTextColor(context.getResources().getColor(R.color.black));
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Error fetching online status for user " + user.getUsername() + ": " + error.getMessage());
+            }
+        });
 
         // Remove any existing listener to prevent unwanted behavior
         holder.suspendSwitch.setOnCheckedChangeListener(null);
