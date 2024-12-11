@@ -11,6 +11,7 @@
     <!-- User Information -->
     <LinearLayout
         android:layout_width="0dp"
+        android:id="@+id/user_container"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_weight="1">

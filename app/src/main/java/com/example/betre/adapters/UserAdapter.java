@@ -1,20 +1,26 @@
 package com.example.betre.adapters;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.betre.R;
+import com.example.betre.UserAnalyticsFragment;
 import com.example.betre.models.User;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -139,10 +145,28 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             }
         });
 
-        // Handle Delete Button Click
         holder.deleteUserButton.setOnClickListener(v -> {
             confirmDeleteUser(user, holder.getAdapterPosition());
         });
+
+        holder.user_container.setOnClickListener(v -> {
+            String userId = user.getUserId();
+            if (userId != null && context instanceof FragmentActivity) {
+                UserAnalyticsFragment userAnalyticsFragment = new UserAnalyticsFragment();
+                Bundle args = new Bundle();
+                args.putString("user_id", userId);
+                userAnalyticsFragment.setArguments(args);
+
+                FragmentManager fragmentManager = ((FragmentActivity) context).getSupportFragmentManager();
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.replace(R.id.home_content, userAnalyticsFragment);
+                transaction.addToBackStack(null);
+                transaction.commit();
+            } else {
+                Log.e(TAG, "Context is not an instance of FragmentActivity or userId is null");
+            }
+        });
+
     }
 
     private void updateSwitchText(Switch suspendSwitch, boolean isSuspended) {
@@ -240,6 +264,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         TextView username, email;
         Switch suspendSwitch;
         ImageButton deleteUserButton;
+        LinearLayout user_container;
 
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -247,6 +272,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             email = itemView.findViewById(R.id.emailTextView);
             suspendSwitch = itemView.findViewById(R.id.suspendSwitch);
             deleteUserButton = itemView.findViewById(R.id.deleteUserButton);
+            user_container = itemView.findViewById(R.id.user_container);
         }
     }
 }
